@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Card Break Value Index</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Sports Card Break Value Index</h1>
+    <p class="subtitle">Break Value Scores, trends, and buy/hold/sell signals</p>
+    <p class="updated" id="last-updated">Last updated: —</p>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search player...">
+    <select id="sport-filter">
+      <option value="all">All Sports</option>
+      <option value="MLB">MLB</option>
+      <option value="NBA">NBA</option>
+      <option value="NFL">NFL</option>
+      <option value="Soccer">Soccer</option>
+    </select>
+    <select id="signal-filter">
+      <option value="all">All Signals</option>
+      <option value="Buy">Buy</option>
+      <option value="Hold">Hold</option>
+      <option value="Sell">Sell</option>
+    </select>
+  </div>
+
+  <table id="player-table">
+    <thead>
+      <tr>
+        <th data-sort="rank">Rank</th>
+        <th data-sort="player">Player</th>
+        <th data-sort="sport">Sport</th>
+        <th data-sort="avg_sale">Avg Sale</th>
+        <th data-sort="bvs">BVS</th>
+        <th data-sort="trend_30day">Trend</th>
+        <th data-sort="signal">Signal</th>
+        <th data-sort="risk">Risk</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="player-rows"></tbody>
+  </table>
+
+  <script src="app.js"></script>
+</body>
+</html>
