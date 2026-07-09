@@ -3,9 +3,629 @@
     {
       "date": "2026-07-09T03:25:46Z",
       "players": [
-        { "player": "Konnor Griffin", "avg_sale": 82, "bvs": 100, "signal": "Buy" },
-        { "player": "Ethan Holliday", "avg_sale": 74, "bvs": 99, "signal": "Buy" },
-        { "player": "Cooper Flagg", "avg_sale": 58, "bvs": 97, "signal": "Buy" }
+        {
+          "player": "Konnor Griffin",
+          "avg_sale": 82,
+          "bvs": 100,
+          "signal": "Buy"
+        },
+        {
+          "player": "Ethan Holliday",
+          "avg_sale": 74,
+          "bvs": 99,
+          "signal": "Buy"
+        },
+        {
+          "player": "Cooper Flagg",
+          "avg_sale": 58,
+          "bvs": 97,
+          "signal": "Buy"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-09T03:29:51.084248+00:00",
+      "players": [
+        {
+          "player": "Konnor Griffin",
+          "avg_sale": 89.69,
+          "bvs": 100,
+          "signal": "Buy"
+        },
+        {
+          "player": "Ethan Holliday",
+          "avg_sale": 90.46,
+          "bvs": 99,
+          "signal": "Buy"
+        },
+        {
+          "player": "Paul Skenes",
+          "avg_sale": 89.6,
+          "bvs": 99,
+          "signal": "Hold"
+        },
+        {
+          "player": "Leo De Vries",
+          "avg_sale": 85.96,
+          "bvs": 98,
+          "signal": "Hold"
+        },
+        {
+          "player": "Jesus Made",
+          "avg_sale": 85.46,
+          "bvs": 98,
+          "signal": "Hold"
+        },
+        {
+          "player": "Shohei Ohtani",
+          "avg_sale": 87.82,
+          "bvs": 97,
+          "signal": "Buy"
+        },
+        {
+          "player": "Aaron Judge",
+          "avg_sale": 85.34,
+          "bvs": 97,
+          "signal": "Hold"
+        },
+        {
+          "player": "Bobby Witt Jr.",
+          "avg_sale": 83.56,
+          "bvs": 96,
+          "signal": "Hold"
+        },
+        {
+          "player": "Elly De La Cruz",
+          "avg_sale": 85.55,
+          "bvs": 96,
+          "signal": "Hold"
+        },
+        {
+          "player": "James Wood",
+          "avg_sale": 84.52,
+          "bvs": 95,
+          "signal": "Hold"
+        },
+        {
+          "player": "Wyatt Langford",
+          "avg_sale": 83.67,
+          "bvs": 95,
+          "signal": "Buy"
+        },
+        {
+          "player": "Jac Caglianone",
+          "avg_sale": 82.06,
+          "bvs": 94,
+          "signal": "Hold"
+        },
+        {
+          "player": "JJ Wetherholt",
+          "avg_sale": 83.32,
+          "bvs": 94,
+          "signal": "Buy"
+        },
+        {
+          "player": "Sebastian Walcott",
+          "avg_sale": 80.83,
+          "bvs": 93,
+          "signal": "Hold"
+        },
+        {
+          "player": "Kevin McGonigle",
+          "avg_sale": 82.87,
+          "bvs": 93,
+          "signal": "Hold"
+        },
+        {
+          "player": "George Lombard Jr.",
+          "avg_sale": 82.36,
+          "bvs": 92,
+          "signal": "Buy"
+        },
+        {
+          "player": "Bryce Rainer",
+          "avg_sale": 80.87,
+          "bvs": 92,
+          "signal": "Buy"
+        },
+        {
+          "player": "Josue De Paula",
+          "avg_sale": 78.06,
+          "bvs": 91,
+          "signal": "Hold"
+        },
+        {
+          "player": "Charlie Condon",
+          "avg_sale": 77.41,
+          "bvs": 91,
+          "signal": "Hold"
+        },
+        {
+          "player": "Jackson Holliday",
+          "avg_sale": 79.48,
+          "bvs": 90,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 81",
+          "avg_sale": 43.03,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 82",
+          "avg_sale": 39.35,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 83",
+          "avg_sale": 38.42,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 84",
+          "avg_sale": 39.11,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 85",
+          "avg_sale": 40.22,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 86",
+          "avg_sale": 38.57,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 87",
+          "avg_sale": 39.69,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 88",
+          "avg_sale": 38.49,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 89",
+          "avg_sale": 38.56,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 90",
+          "avg_sale": 35.62,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 91",
+          "avg_sale": 37.38,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 92",
+          "avg_sale": 33.64,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 93",
+          "avg_sale": 34.15,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 94",
+          "avg_sale": 31.88,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 95",
+          "avg_sale": 34.91,
+          "bvs": 60,
+          "signal": "Buy"
+        },
+        {
+          "player": "Test Player 96",
+          "avg_sale": 33.01,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 97",
+          "avg_sale": 31.86,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 98",
+          "avg_sale": 32.81,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 99",
+          "avg_sale": 31.11,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Test Player 100",
+          "avg_sale": 31.53,
+          "bvs": 60,
+          "signal": "Hold"
+        },
+        {
+          "player": "Cooper Flagg",
+          "avg_sale": 64.56,
+          "bvs": 80,
+          "signal": "Hold"
+        },
+        {
+          "player": "VJ Edgecombe",
+          "avg_sale": 63.26,
+          "bvs": 79,
+          "signal": "Buy"
+        },
+        {
+          "player": "Victor Wembanyama",
+          "avg_sale": 63.87,
+          "bvs": 79,
+          "signal": "Buy"
+        },
+        {
+          "player": "Luka Doncic",
+          "avg_sale": 62.94,
+          "bvs": 78,
+          "signal": "Hold"
+        },
+        {
+          "player": "LeBron James",
+          "avg_sale": 62.9,
+          "bvs": 78,
+          "signal": "Hold"
+        },
+        {
+          "player": "Stephen Curry",
+          "avg_sale": 63.88,
+          "bvs": 77,
+          "signal": "Buy"
+        },
+        {
+          "player": "Anthony Edwards",
+          "avg_sale": 61.99,
+          "bvs": 77,
+          "signal": "Buy"
+        },
+        {
+          "player": "Shai Gilgeous-Alexander",
+          "avg_sale": 60.87,
+          "bvs": 76,
+          "signal": "Buy"
+        },
+        {
+          "player": "Nikola Jokic",
+          "avg_sale": 61.41,
+          "bvs": 76,
+          "signal": "Hold"
+        },
+        {
+          "player": "Jayson Tatum",
+          "avg_sale": 58.21,
+          "bvs": 75,
+          "signal": "Hold"
+        },
+        {
+          "player": "Paolo Banchero",
+          "avg_sale": 59.07,
+          "bvs": 75,
+          "signal": "Buy"
+        },
+        {
+          "player": "Dylan Harper",
+          "avg_sale": 57.98,
+          "bvs": 74,
+          "signal": "Hold"
+        },
+        {
+          "player": "Ace Bailey",
+          "avg_sale": 60,
+          "bvs": 74,
+          "signal": "Buy"
+        },
+        {
+          "player": "Tre Johnson",
+          "avg_sale": 58.08,
+          "bvs": 73,
+          "signal": "Buy"
+        },
+        {
+          "player": "Jeremiah Fears",
+          "avg_sale": 58.08,
+          "bvs": 73,
+          "signal": "Hold"
+        },
+        {
+          "player": "Kasparas Jakucionis",
+          "avg_sale": 55.9,
+          "bvs": 72,
+          "signal": "Buy"
+        },
+        {
+          "player": "Kon Knueppel",
+          "avg_sale": 57.46,
+          "bvs": 72,
+          "signal": "Buy"
+        },
+        {
+          "player": "Cade Cunningham",
+          "avg_sale": 55.8,
+          "bvs": 71,
+          "signal": "Hold"
+        },
+        {
+          "player": "Ja Morant",
+          "avg_sale": 53.47,
+          "bvs": 71,
+          "signal": "Hold"
+        },
+        {
+          "player": "Giannis Antetokounmpo",
+          "avg_sale": 54.26,
+          "bvs": 70,
+          "signal": "Hold"
+        },
+        {
+          "player": "Jayden Daniels",
+          "avg_sale": 76.23,
+          "bvs": 90,
+          "signal": "Buy"
+        },
+        {
+          "player": "Caleb Williams",
+          "avg_sale": 74.91,
+          "bvs": 89,
+          "signal": "Hold"
+        },
+        {
+          "player": "Patrick Mahomes",
+          "avg_sale": 76.28,
+          "bvs": 89,
+          "signal": "Buy"
+        },
+        {
+          "player": "Josh Allen",
+          "avg_sale": 76.22,
+          "bvs": 88,
+          "signal": "Buy"
+        },
+        {
+          "player": "Joe Burrow",
+          "avg_sale": 76.92,
+          "bvs": 88,
+          "signal": "Buy"
+        },
+        {
+          "player": "Lamar Jackson",
+          "avg_sale": 72.88,
+          "bvs": 87,
+          "signal": "Buy"
+        },
+        {
+          "player": "CJ Stroud",
+          "avg_sale": 74.51,
+          "bvs": 87,
+          "signal": "Hold"
+        },
+        {
+          "player": "Drake Maye",
+          "avg_sale": 72.18,
+          "bvs": 86,
+          "signal": "Buy"
+        },
+        {
+          "player": "Cam Ward",
+          "avg_sale": 71.62,
+          "bvs": 86,
+          "signal": "Hold"
+        },
+        {
+          "player": "Shedeur Sanders",
+          "avg_sale": 73.43,
+          "bvs": 85,
+          "signal": "Buy"
+        },
+        {
+          "player": "Travis Hunter",
+          "avg_sale": 72.32,
+          "bvs": 85,
+          "signal": "Hold"
+        },
+        {
+          "player": "Arch Manning",
+          "avg_sale": 72.66,
+          "bvs": 84,
+          "signal": "Buy"
+        },
+        {
+          "player": "Bo Nix",
+          "avg_sale": 68.67,
+          "bvs": 84,
+          "signal": "Hold"
+        },
+        {
+          "player": "Justin Herbert",
+          "avg_sale": 70.46,
+          "bvs": 83,
+          "signal": "Buy"
+        },
+        {
+          "player": "Ja'Marr Chase",
+          "avg_sale": 70.88,
+          "bvs": 83,
+          "signal": "Hold"
+        },
+        {
+          "player": "Justin Jefferson",
+          "avg_sale": 69.36,
+          "bvs": 82,
+          "signal": "Hold"
+        },
+        {
+          "player": "Puka Nacua",
+          "avg_sale": 66.19,
+          "bvs": 82,
+          "signal": "Hold"
+        },
+        {
+          "player": "Bijan Robinson",
+          "avg_sale": 68.06,
+          "bvs": 81,
+          "signal": "Buy"
+        },
+        {
+          "player": "Brock Purdy",
+          "avg_sale": 68.57,
+          "bvs": 81,
+          "signal": "Buy"
+        },
+        {
+          "player": "Micah Parsons",
+          "avg_sale": 64.82,
+          "bvs": 80,
+          "signal": "Hold"
+        },
+        {
+          "player": "Lamine Yamal",
+          "avg_sale": 54.42,
+          "bvs": 70,
+          "signal": "Buy"
+        },
+        {
+          "player": "Kylian Mbappe",
+          "avg_sale": 51.93,
+          "bvs": 69,
+          "signal": "Hold"
+        },
+        {
+          "player": "Erling Haaland",
+          "avg_sale": 54.14,
+          "bvs": 69,
+          "signal": "Buy"
+        },
+        {
+          "player": "Jude Bellingham",
+          "avg_sale": 53.39,
+          "bvs": 68,
+          "signal": "Hold"
+        },
+        {
+          "player": "Vinicius Jr.",
+          "avg_sale": 49.26,
+          "bvs": 68,
+          "signal": "Hold"
+        },
+        {
+          "player": "Endrick",
+          "avg_sale": 51.63,
+          "bvs": 67,
+          "signal": "Buy"
+        },
+        {
+          "player": "Estevao Willian",
+          "avg_sale": 49.5,
+          "bvs": 67,
+          "signal": "Hold"
+        },
+        {
+          "player": "Franco Mastantuono",
+          "avg_sale": 49.28,
+          "bvs": 66,
+          "signal": "Buy"
+        },
+        {
+          "player": "Cole Palmer",
+          "avg_sale": 47.01,
+          "bvs": 66,
+          "signal": "Hold"
+        },
+        {
+          "player": "Bukayo Saka",
+          "avg_sale": 48.75,
+          "bvs": 65,
+          "signal": "Buy"
+        },
+        {
+          "player": "Pedri",
+          "avg_sale": 46.96,
+          "bvs": 65,
+          "signal": "Buy"
+        },
+        {
+          "player": "Jamal Musiala",
+          "avg_sale": 46.35,
+          "bvs": 64,
+          "signal": "Hold"
+        },
+        {
+          "player": "Florian Wirtz",
+          "avg_sale": 47.1,
+          "bvs": 64,
+          "signal": "Hold"
+        },
+        {
+          "player": "Arda Guler",
+          "avg_sale": 45.91,
+          "bvs": 63,
+          "signal": "Buy"
+        },
+        {
+          "player": "Rodri",
+          "avg_sale": 44.41,
+          "bvs": 63,
+          "signal": "Buy"
+        },
+        {
+          "player": "Harry Kane",
+          "avg_sale": 45.18,
+          "bvs": 62,
+          "signal": "Hold"
+        },
+        {
+          "player": "Julian Alvarez",
+          "avg_sale": 41.88,
+          "bvs": 62,
+          "signal": "Hold"
+        },
+        {
+          "player": "Phil Foden",
+          "avg_sale": 44.84,
+          "bvs": 61,
+          "signal": "Buy"
+        },
+        {
+          "player": "Lionel Messi",
+          "avg_sale": 41.18,
+          "bvs": 61,
+          "signal": "Hold"
+        },
+        {
+          "player": "Cristiano Ronaldo",
+          "avg_sale": 43.56,
+          "bvs": 60,
+          "signal": "Hold"
+        }
       ]
     }
   ]
