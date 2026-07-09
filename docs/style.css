@@ -113,3 +113,205 @@ tr:hover td {
   line-height: 1.4;
   margin: 0 0 8px 0;
 }
+
+/* ---- View toggle ---- */
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.view-btn.active {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* ---- Market board (ticker view) ---- */
+
+.board {
+  background: var(--panel);
+  border-radius: 8px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-header,
+.board-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 0.8fr 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.board-header {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.board-row {
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+.board-row:last-child {
+  border-bottom: none;
+}
+
+.board-row:hover {
+  background: #1d212b;
+}
+
+.board-row.signal-buy { border-left-color: var(--accent); }
+.board-row.signal-hold { border-left-color: var(--hold); }
+.board-row.signal-sell { border-left-color: var(--sell); }
+
+.board-row .cell-player {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+}
+
+.board-row .cell-sport {
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+}
+
+.signal-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.signal-chip.signal-buy { background: rgba(74, 222, 128, 0.15); color: var(--accent); }
+.signal-chip.signal-hold { background: rgba(251, 191, 36, 0.15); color: var(--hold); }
+.signal-chip.signal-sell { background: rgba(248, 113, 113, 0.15); color: var(--sell); }
+
+/* ---- Modal ---- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+#modal-close:hover {
+  color: var(--text);
+}
+
+.modal-title {
+  margin: 0 0 4px 0;
+  font-size: 1.3rem;
+}
+
+.modal-subtitle {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 16px 0;
+}
+
+.modal-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal-stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.modal-stat-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.modal-stat-value {
+  font-family: "SF Mono", "Courier New", monospace;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.chart-wrap {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.chart-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.chart-axis-label {
+  fill: var(--muted);
+  font-size: 10px;
+}

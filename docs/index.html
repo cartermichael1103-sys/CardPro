@@ -28,24 +28,49 @@
       <option value="Hold">Hold</option>
       <option value="Sell">Sell</option>
     </select>
+    <div class="view-toggle" role="tablist">
+      <button type="button" id="view-table-btn" class="view-btn active" role="tab" aria-selected="true">Table</button>
+      <button type="button" id="view-board-btn" class="view-btn" role="tab" aria-selected="false">Market</button>
+    </div>
   </div>
 
-  <table id="player-table">
-    <thead>
-      <tr>
-        <th data-sort="rank">Rank</th>
-        <th data-sort="player">Player</th>
-        <th data-sort="sport">Sport</th>
-        <th data-sort="avg_sale">Avg Sale</th>
-        <th data-sort="bvs">BVS</th>
-        <th data-sort="trend_30day">Trend</th>
-        <th data-sort="signal">Signal</th>
-        <th data-sort="risk">Risk</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-    <tbody id="player-rows"></tbody>
-  </table>
+  <div id="table-view">
+    <table id="player-table">
+      <thead>
+        <tr>
+          <th data-sort="rank">Rank</th>
+          <th data-sort="player">Player</th>
+          <th data-sort="sport">Sport</th>
+          <th data-sort="avg_sale">Avg Sale</th>
+          <th data-sort="bvs">BVS</th>
+          <th data-sort="trend_30day">Trend</th>
+          <th data-sort="signal">Signal</th>
+          <th data-sort="risk">Risk</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="player-rows"></tbody>
+    </table>
+  </div>
+
+  <div id="board-view" class="board" hidden>
+    <div class="board-header">
+      <span>Player</span>
+      <span>Sport</span>
+      <span>Price</span>
+      <span>BVS</span>
+      <span>Trend</span>
+      <span>Signal</span>
+    </div>
+    <div id="board-rows"></div>
+  </div>
+
+  <div id="player-modal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button type="button" id="modal-close" aria-label="Close">&times;</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
 
   <section id="ebay-section">
     <h2>eBay Active Listing Asking Prices</h2>

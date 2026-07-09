@@ -21,6 +21,7 @@ Expected header row (row 1), columns can be in any order:
 import json
 import os
 import sys
+from datetime import datetime, timezone
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -32,6 +33,9 @@ NUMERIC_FIELDS = {
     "rank", "avg_sale", "psa10_avg", "sales_per_week",
     "liquidity_score", "bvs"
 }
+
+# How many past snapshots to keep in history.json (one snapshot per workflow run)
+MAX_HISTORY_SNAPSHOTS = 200
 
 
 def get_service():
@@ -74,19 +78,48 @@ def rows_to_records(rows):
     return records
 
 
+def append_history_snapshot(records, history_path):
+    if os.path.exists(history_path):
+        with open(history_path) as f:
+            history = json.load(f)
+    else:
+        history = {"snapshots": []}
+
+    snapshot = {
+        "date": datetime.now(timezone.utc).isoformat(),
+        "players": [
+            {
+                "player": r.get("player"),
+                "avg_sale": r.get("avg_sale"),
+                "bvs": r.get("bvs"),
+                "signal": r.get("signal"),
+            }
+            for r in records
+        ],
+    }
+    history["snapshots"].append(snapshot)
+    history["snapshots"] = history["snapshots"][-MAX_HISTORY_SNAPSHOTS:]
+
+    with open(history_path, "w") as f:
+        json.dump(history, f, indent=2)
+
+
 def main():
     sheet_id = os.environ["SHEET_ID"]
     service = get_service()
     rows = fetch_rows(service, sheet_id)
     records = rows_to_records(rows)
 
-    out_path = os.path.join(
-        os.path.dirname(__file__), "..", "docs", "data", "players.json"
-    )
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "docs", "data")
+    out_path = os.path.join(data_dir, "players.json")
     with open(out_path, "w") as f:
         json.dump(records, f, indent=2)
 
+    history_path = os.path.join(data_dir, "history.json")
+    append_history_snapshot(records, history_path)
+
     print(f"Wrote {len(records)} players to {out_path}")
+    print(f"Appended history snapshot to {history_path}")
 
 
 if __name__ == "__main__":
