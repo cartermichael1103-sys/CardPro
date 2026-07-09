@@ -47,6 +47,30 @@
     <tbody id="player-rows"></tbody>
   </table>
 
+  <section id="ebay-section">
+    <h2>eBay Active Listing Asking Prices</h2>
+    <p class="disclaimer" id="ebay-disclaimer">
+      These are current Buy-It-Now <strong>asking</strong> prices, not sold/transacted prices.
+      Sellers list optimistically, so actual sale prices typically run lower. Filtered by
+      keyword to approximate raw, non-numbered, non-autographed, non-graded cards — this is
+      a best-effort heuristic, not exact classification.
+    </p>
+    <p class="updated" id="ebay-last-updated">Last updated: —</p>
+    <table id="ebay-table">
+      <thead>
+        <tr>
+          <th data-sort="player">Player</th>
+          <th data-sort="sport">Sport</th>
+          <th data-sort="avg_asking_price">Avg Asking</th>
+          <th data-sort="min_asking_price">Min</th>
+          <th data-sort="max_asking_price">Max</th>
+          <th data-sort="listing_count">Listings</th>
+        </tr>
+      </thead>
+      <tbody id="ebay-rows"></tbody>
+    </table>
+  </section>
+
   <script src="app.js"></script>
 </body>
 </html>
