@@ -1,0 +1,39 @@
+name: Update eBay Asking Prices
+
+# Manual trigger only — click "Run workflow" in the Actions tab whenever
+# you want to refresh active-listing asking-price stats from eBay.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-ebay-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Pull asking prices from eBay
+        env:
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: python scripts/pull_ebay_prices.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data/ebay_asking_prices.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update eBay asking price data"
+          git pull --rebase origin main
+          git push
