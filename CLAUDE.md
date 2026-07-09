@@ -13,7 +13,11 @@ values. Just trigger the relevant workflow.
 - `SHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON` — used by `update-data.yml`
   (Google Sheet → `docs/data/players.json`)
 - `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` — used by
-  `update-ebay-prices.yml` (eBay Browse API → `docs/data/ebay_asking_prices.json`)
+  `update-ebay-prices.yml` (eBay Browse API → `docs/data/ebay_asking_prices.json`).
+  As of 2026-07-09, eBay's Production API access for this account was
+  still pending manual approval (eBay: "takes at least one business
+  day"), which causes a 401 at the OAuth token endpoint. Not a bug —
+  just re-run the workflow after approval clears.
 
 ## Gotchas
 
