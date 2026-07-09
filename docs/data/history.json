@@ -1,0 +1,12 @@
+{
+  "snapshots": [
+    {
+      "date": "2026-07-09T03:25:46Z",
+      "players": [
+        { "player": "Konnor Griffin", "avg_sale": 82, "bvs": 100, "signal": "Buy" },
+        { "player": "Ethan Holliday", "avg_sale": 74, "bvs": 99, "signal": "Buy" },
+        { "player": "Cooper Flagg", "avg_sale": 58, "bvs": 97, "signal": "Buy" }
+      ]
+    }
+  ]
+}
