@@ -129,6 +129,24 @@ async function handleEbayStatus(env, origin) {
   return jsonResponse({ connected: Boolean(refreshToken) }, 200, origin);
 }
 
+// Best Offer only applies to FIXED_PRICE; Buy It Now price only applies
+// to AUCTION — pulling out just the relevant one keeps buildOfferBody's
+// options object clean regardless of what the client sends.
+function buildOfferOptionsFromRequest(body, format) {
+  if (format === "AUCTION") {
+    return body.buyItNowPrice ? { buyItNowPrice: Number(body.buyItNowPrice) } : {};
+  }
+  if (body.bestOfferEnabled) {
+    return {
+      bestOffer: {
+        enabled: true,
+        minimumPrice: body.bestOfferMinimumPrice ? Number(body.bestOfferMinimumPrice) : undefined,
+      },
+    };
+  }
+  return {};
+}
+
 async function handleSaveDraft(request, env, origin) {
   let body;
   try {
@@ -148,6 +166,8 @@ async function handleSaveDraft(request, env, origin) {
   if (!Number.isFinite(price) || price <= 0) {
     return jsonResponse({ error: "A positive `price` is required" }, 400, origin);
   }
+  const format = body.format === "AUCTION" ? "AUCTION" : "FIXED_PRICE";
+  const offerOptions = buildOfferOptionsFromRequest(body, format);
 
   const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
   if (!refreshToken) {
@@ -174,7 +194,7 @@ async function handleSaveDraft(request, env, origin) {
 
     const sku = crypto.randomUUID();
     await createInventoryItem(sku, body.card, body.draft, imageUrls, accessToken);
-    const offerId = await createOffer(sku, body.draft, categoryId, policies, price, accessToken);
+    const offerId = await createOffer(sku, body.draft, categoryId, policies, price, format, offerOptions, accessToken);
 
     return jsonResponse(
       {
@@ -288,6 +308,7 @@ async function handleUpdateDraft(request, env, origin) {
 
     const policies = await getBusinessPolicies(accessToken);
     const chosenFormat = format || currentOffer.format || "FIXED_PRICE";
+    const offerOptions = buildOfferOptionsFromRequest(body, chosenFormat);
     await updateOffer(
       offerId,
       sku,
@@ -296,6 +317,7 @@ async function handleUpdateDraft(request, env, origin) {
       policies,
       price,
       chosenFormat,
+      offerOptions,
       accessToken
     );
 

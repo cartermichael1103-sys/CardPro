@@ -181,6 +181,20 @@ async function handleSaveEbayDraft() {
     return;
   }
 
+  const format = document.getElementById("draft-format-input").value;
+  const extra = {};
+  if (format === "AUCTION") {
+    const binVal = document.getElementById("draft-bin-price").value;
+    if (binVal) extra.buyItNowPrice = parseFloat(binVal);
+  } else {
+    const bestOfferEnabled = document.getElementById("draft-best-offer-enabled").checked;
+    extra.bestOfferEnabled = bestOfferEnabled;
+    if (bestOfferEnabled) {
+      const minVal = document.getElementById("draft-best-offer-min").value;
+      if (minVal) extra.bestOfferMinimumPrice = parseFloat(minVal);
+    }
+  }
+
   const saveBtn = document.getElementById("save-ebay-draft-btn");
   saveBtn.disabled = true;
   statusEl.style.color = "var(--muted)";
@@ -198,6 +212,8 @@ async function handleSaveEbayDraft() {
           description: document.getElementById("draft-description").value,
         },
         price,
+        format,
+        ...extra,
       }),
     });
     const json = await res.json();
@@ -230,11 +246,16 @@ function handleCopyClick(e) {
 
 document.getElementById("photo-input").addEventListener("change", handleFileChange);
 document.getElementById("analyze-btn").addEventListener("click", handleAnalyze);
-document.querySelectorAll(".copy-btn").forEach((btn) => btn.addEventListener("click", handleCopyClick));
+document.querySelectorAll(".copy-btn[data-target]").forEach((btn) => btn.addEventListener("click", handleCopyClick));
 document.getElementById("ebay-connect-btn").addEventListener("click", () => {
   window.location.href = `${WORKER_URL}/oauth/start`;
 });
 document.getElementById("save-ebay-draft-btn").addEventListener("click", handleSaveEbayDraft);
+document.getElementById("draft-format-input").addEventListener("change", (e) => {
+  const isAuction = e.target.value === "AUCTION";
+  document.getElementById("auction-fields").style.display = isAuction ? "block" : "none";
+  document.getElementById("fixedprice-fields").style.display = isAuction ? "none" : "block";
+});
 
 if (!isConfigured()) {
   document.getElementById("worker-not-configured").hidden = false;
