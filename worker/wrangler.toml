@@ -8,9 +8,16 @@ compatibility_date = "2026-08-01"
 #   EBAY_CLIENT_SECRET  - Production Cert ID from developer.ebay.com/my/keys
 
 [vars]
-# The only browser origin allowed to call this Worker. Update if you serve
-# the site from somewhere other than GitHub Pages.
+# The only browser origin allowed to call this Worker (bare origin, no
+# path — used for the CORS header, which can't include a path). Update if
+# you serve the site from somewhere other than GitHub Pages.
 ALLOWED_ORIGIN = "https://cartermichael1103-sys.github.io"
+
+# The site's actual base URL, including the repo path — GitHub Pages
+# project sites (as opposed to user/org root sites) are served under
+# /<repo-name>/, not at the origin root. Used to build the OAuth redirect
+# back to list-card.html after login. Update if this ever changes.
+SITE_BASE_URL = "https://cartermichael1103-sys.github.io/CardPro"
 
 # The RuName (eBay OAuth redirect name) from developer.ebay.com/my/keys ->
 # User Tokens (eBay Sign-in). Not secret, but must match what's registered
