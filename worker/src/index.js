@@ -4,6 +4,7 @@ import { buildAuthorizeUrl, exchangeCodeForTokens, refreshAccessToken, getApplic
 import {
   getCategoryId,
   getBusinessPolicies,
+  getMerchantLocationKey,
   uploadImagesToR2,
   createInventoryItem,
   createOffer,
@@ -192,10 +193,15 @@ async function handleSaveDraft(request, env, origin) {
     const imageUrls = await uploadImagesToR2(body.images, env.CARD_IMAGES, env.R2_PUBLIC_BASE_URL);
     const categoryId = await getCategoryId(body.draft.title, appToken);
     const policies = await getBusinessPolicies(accessToken);
+    // Best-effort: only actually required by eBay at publish time (see
+    // getMerchantLocationKey()'s comment), so a seller with no location
+    // configured yet can still save/review a draft — it just won't
+    // publish until they set one up and re-save.
+    const merchantLocationKey = await getMerchantLocationKey(accessToken).catch(() => undefined);
 
     const sku = crypto.randomUUID();
     await createInventoryItem(sku, body.card, body.draft, imageUrls, accessToken);
-    const offerId = await createOffer(sku, body.draft, categoryId, policies, price, format, offerOptions, accessToken);
+    const offerId = await createOffer(sku, body.draft, categoryId, policies, price, format, offerOptions, merchantLocationKey, accessToken);
 
     return jsonResponse(
       {
@@ -310,6 +316,11 @@ async function handleUpdateDraft(request, env, origin) {
     const policies = await getBusinessPolicies(accessToken);
     const chosenFormat = format || currentOffer.format || "FIXED_PRICE";
     const offerOptions = buildOfferOptionsFromRequest(body, chosenFormat);
+    // Keep it if the offer already has one; otherwise best-effort fetch,
+    // so editing an old draft (created before this field existed) picks
+    // it up automatically — see getMerchantLocationKey()'s comment.
+    const merchantLocationKey = currentOffer.merchantLocationKey
+      || (await getMerchantLocationKey(accessToken).catch(() => undefined));
     await updateOffer(
       offerId,
       sku,
@@ -319,6 +330,7 @@ async function handleUpdateDraft(request, env, origin) {
       price,
       chosenFormat,
       offerOptions,
+      merchantLocationKey,
       accessToken
     );
 
