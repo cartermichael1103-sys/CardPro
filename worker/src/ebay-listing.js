@@ -146,12 +146,21 @@ export async function getInventoryItem(sku, accessToken, fetchImpl = fetch) {
 // currently-stored item (preserving condition and aspects) rather than
 // rebuilding from a card object.
 export async function updateInventoryItemFields(sku, currentItem, updates, accessToken, fetchImpl = fetch) {
+  // Real gotcha hit live: eBay does NOT omit `availability` on items
+  // created before this field existed — it returns it explicitly with
+  // `quantity: 0`. A `currentItem.availability || default` check is
+  // truthy on that object and never backfills, so the 0 sticks around
+  // forever and publish keeps failing with the same "insufficient
+  // quantity" error. Check the actual quantity value, not just presence
+  // of the object.
+  const currentQty = currentItem.availability?.shipToLocationAvailability?.quantity;
+  const availability = currentQty >= 1
+    ? currentItem.availability
+    : { shipToLocationAvailability: { quantity: 1 } };
+
   const body = {
     condition: currentItem.condition,
-    // Preserve it if already set; default to quantity 1 for items created
-    // before this field existed, so editing an old draft doesn't silently
-    // drop the availability a later Auction publish needs.
-    availability: currentItem.availability || { shipToLocationAvailability: { quantity: 1 } },
+    availability,
     product: {
       ...currentItem.product,
       ...(updates.title !== undefined ? { title: updates.title } : {}),

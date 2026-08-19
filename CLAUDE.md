@@ -76,6 +76,20 @@ values. Just trigger the relevant workflow.
   fix and still fails to publish with this error, open it on My eBay
   Drafts, hit Edit → Save once (even with no changes) to backfill the
   field, then retry Publish.**
+- Real gotcha hit live (round 2, same error): the Edit→Save backfill
+  above didn't actually fix the affected draft — same exact error
+  persisted. Root cause: eBay does NOT omit `availability` on an item
+  that was created before this field existed — it returns it back
+  explicitly with `quantity: 0`. The original backfill check was
+  `currentItem.availability || default`, which is truthy on
+  `{shipToLocationAvailability:{quantity:0}}` and so never replaced it —
+  the 0 just got preserved forever. Fixed to check the actual quantity
+  value (`currentItem.availability?.shipToLocationAvailability?.quantity`)
+  and bump it to 1 whenever it's not already `>= 1`, not just when the
+  whole object is missing. Lesson for future edits to this file: eBay's
+  API tends to return explicit zero-ish defaults rather than omitting
+  fields, so "is this field present" is often the wrong check — check
+  the actual value.
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
