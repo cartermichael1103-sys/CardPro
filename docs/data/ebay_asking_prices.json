@@ -1,0 +1,342 @@
+{
+  "generated_at": "2026-08-19T16:25:54.655814+00:00",
+  "note": "Active Buy-It-Now listing asking prices from eBay Browse API, filtered by keyword to approximate raw/non-numbered/non-auto/non-graded cards. NOT sold/transacted prices.",
+  "players": [
+    {
+      "player": "Konnor Griffin",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 42.42,
+      "min_asking_price": 1.09,
+      "max_asking_price": 349.0
+    },
+    {
+      "player": "Ethan Holliday",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 16.51,
+      "min_asking_price": 0.99,
+      "max_asking_price": 149.0
+    },
+    {
+      "player": "Paul Skenes",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 99.18,
+      "min_asking_price": 0.99,
+      "max_asking_price": 3000.0
+    },
+    {
+      "player": "Shohei Ohtani",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 43.83,
+      "min_asking_price": 2.99,
+      "max_asking_price": 229.99
+    },
+    {
+      "player": "Aaron Judge",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 51.74,
+      "min_asking_price": 0.99,
+      "max_asking_price": 1200.0
+    },
+    {
+      "player": "Bobby Witt Jr.",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 27.66,
+      "min_asking_price": 1.25,
+      "max_asking_price": 319.99
+    },
+    {
+      "player": "Elly De La Cruz",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 11.16,
+      "min_asking_price": 0.99,
+      "max_asking_price": 75.0
+    },
+    {
+      "player": "Leo De Vries",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 28.65,
+      "min_asking_price": 0.99,
+      "max_asking_price": 294.99
+    },
+    {
+      "player": "Jesus Made",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 26.16,
+      "min_asking_price": 1.25,
+      "max_asking_price": 240.0
+    },
+    {
+      "player": "Sebastian Walcott",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 20.72,
+      "min_asking_price": 0.99,
+      "max_asking_price": 349.99
+    },
+    {
+      "player": "Kevin McGonigle",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 35.25,
+      "min_asking_price": 1.19,
+      "max_asking_price": 299.99
+    },
+    {
+      "player": "JJ Wetherholt",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 42.66,
+      "min_asking_price": 1.49,
+      "max_asking_price": 385.0
+    },
+    {
+      "player": "Bryce Rainer",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 20.81,
+      "min_asking_price": 0.99,
+      "max_asking_price": 225.0
+    },
+    {
+      "player": "Josue De Paula",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 11.17,
+      "min_asking_price": 0.99,
+      "max_asking_price": 124.99
+    },
+    {
+      "player": "George Lombard Jr.",
+      "sport": "MLB",
+      "listing_count": 50,
+      "avg_asking_price": 38.12,
+      "min_asking_price": 1.99,
+      "max_asking_price": 275.0
+    },
+    {
+      "player": "VJ Edgecombe",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 36.98,
+      "min_asking_price": 0.99,
+      "max_asking_price": 350.0
+    },
+    {
+      "player": "Cooper Flagg",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 94.61,
+      "min_asking_price": 4.25,
+      "max_asking_price": 1100.0
+    },
+    {
+      "player": "Victor Wembanyama",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 38.37,
+      "min_asking_price": 1.0,
+      "max_asking_price": 299.0
+    },
+    {
+      "player": "Luka Doncic",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 37.46,
+      "min_asking_price": 0.99,
+      "max_asking_price": 374.49
+    },
+    {
+      "player": "Anthony Edwards",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 19.92,
+      "min_asking_price": 1.25,
+      "max_asking_price": 81.99
+    },
+    {
+      "player": "Dylan Harper",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 97.82,
+      "min_asking_price": 1.0,
+      "max_asking_price": 1000.0
+    },
+    {
+      "player": "Ace Bailey",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 31.6,
+      "min_asking_price": 0.99,
+      "max_asking_price": 700.0
+    },
+    {
+      "player": "Kasparas Jakucionis",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 13.77,
+      "min_asking_price": 0.99,
+      "max_asking_price": 250.0
+    },
+    {
+      "player": "Tre Johnson",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 14.05,
+      "min_asking_price": 0.99,
+      "max_asking_price": 249.99
+    },
+    {
+      "player": "Jeremiah Fears",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 22.97,
+      "min_asking_price": 0.99,
+      "max_asking_price": 499.0
+    },
+    {
+      "player": "Kon Knueppel",
+      "sport": "NBA",
+      "listing_count": 50,
+      "avg_asking_price": 309.18,
+      "min_asking_price": 1.49,
+      "max_asking_price": 13000.0
+    },
+    {
+      "player": "Jayden Daniels",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 26.13,
+      "min_asking_price": 0.99,
+      "max_asking_price": 349.99
+    },
+    {
+      "player": "Caleb Williams",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 31.03,
+      "min_asking_price": 1.0,
+      "max_asking_price": 500.0
+    },
+    {
+      "player": "Travis Hunter",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 22.78,
+      "min_asking_price": 1.0,
+      "max_asking_price": 189.95
+    },
+    {
+      "player": "Patrick Mahomes",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 62.98,
+      "min_asking_price": 1.15,
+      "max_asking_price": 555.0
+    },
+    {
+      "player": "Drake Maye",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 41.1,
+      "min_asking_price": 1.2,
+      "max_asking_price": 350.0
+    },
+    {
+      "player": "C.J. Stroud",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 11.37,
+      "min_asking_price": 0.99,
+      "max_asking_price": 125.0
+    },
+    {
+      "player": "Shedeur Sanders",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 18.56,
+      "min_asking_price": 1.3,
+      "max_asking_price": 100.0
+    },
+    {
+      "player": "Arch Manning",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 53.88,
+      "min_asking_price": 3.99,
+      "max_asking_price": 775.0
+    },
+    {
+      "player": "Cam Ward",
+      "sport": "NFL",
+      "listing_count": 50,
+      "avg_asking_price": 34.52,
+      "min_asking_price": 1.25,
+      "max_asking_price": 450.0
+    },
+    {
+      "player": "Lamine Yamal",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 93.45,
+      "min_asking_price": 2.5,
+      "max_asking_price": 1999.0
+    },
+    {
+      "player": "Kylian Mbappe",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 37.81,
+      "min_asking_price": 0.99,
+      "max_asking_price": 260.79
+    },
+    {
+      "player": "Estevao Willian",
+      "sport": "Soccer",
+      "listing_count": 19,
+      "avg_asking_price": 33.33,
+      "min_asking_price": 2.32,
+      "max_asking_price": 350.0
+    },
+    {
+      "player": "Endrick",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 25.58,
+      "min_asking_price": 1.69,
+      "max_asking_price": 189.99
+    },
+    {
+      "player": "Franco Mastantuono",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 17.45,
+      "min_asking_price": 0.99,
+      "max_asking_price": 275.44
+    },
+    {
+      "player": "Jude Bellingham",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 35.05,
+      "min_asking_price": 0.99,
+      "max_asking_price": 487.04
+    },
+    {
+      "player": "Arda Guler",
+      "sport": "Soccer",
+      "listing_count": 50,
+      "avg_asking_price": 18.46,
+      "min_asking_price": 0.99,
+      "max_asking_price": 114.66
+    }
+  ]
+}
