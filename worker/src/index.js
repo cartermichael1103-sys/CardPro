@@ -1,6 +1,6 @@
 import { analyzeCard } from "./card-analysis.js";
 import { buildDraft } from "./draft.js";
-import { buildAuthorizeUrl, exchangeCodeForTokens, refreshAccessToken } from "./ebay-oauth.js";
+import { buildAuthorizeUrl, exchangeCodeForTokens, refreshAccessToken, getApplicationToken } from "./ebay-oauth.js";
 import {
   getCategoryId,
   getBusinessPolicies,
@@ -154,9 +154,16 @@ async function handleSaveDraft(request, env, origin) {
       clientId: env.EBAY_CLIENT_ID,
       clientSecret: env.EBAY_CLIENT_SECRET,
     });
+    // Taxonomy API (category lookup) needs an application token, not a
+    // user token — category data isn't user-specific, and the user
+    // token's scopes (sell.inventory, sell.account.readonly) don't cover it.
+    const appToken = await getApplicationToken({
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
 
     const imageUrls = await uploadImagesToR2(body.images, env.CARD_IMAGES, env.R2_PUBLIC_BASE_URL);
-    const categoryId = await getCategoryId(body.draft.title, accessToken);
+    const categoryId = await getCategoryId(body.draft.title, appToken);
     const policies = await getBusinessPolicies(accessToken);
 
     const sku = crypto.randomUUID();
