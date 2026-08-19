@@ -115,6 +115,19 @@ values. Just trigger the relevant workflow.
   that hit the actual route rather than just unit-testing the handler
   function in isolation — worth remembering when adding future routes
   here, since this class of bug won't show up in a function-level test.
+- As of the same date, both the create flow (`list-card.html`) and
+  edit flow (`my-drafts.html`) support Auction format with an optional
+  Buy It Now price, and Fixed Price format with optional Best Offer +
+  a minimum auto-decline price. Best Offer is structurally Fixed-Price-
+  only on eBay's platform (auctions can't have it) — the code enforces
+  this by construction (`buildOfferBody` only reads `bestOffer` when
+  format isn't AUCTION) rather than needing a separate guard. The
+  exact field names used (`pricingSummary.buyItNowPrice`,
+  `listingPolicies.bestOfferTerms.{bestOfferEnabled,autoDeclinePrice}`)
+  are my best-confidence guess from eBay's schema, NOT yet verified
+  against the live API — treat as a likely next debugging-round
+  candidate, same pattern as the category-tree URL and token-type bugs
+  that were real live-API surprises earlier in this integration.
 
 ## Gotchas
 

@@ -156,7 +156,20 @@ export async function deleteInventoryItem(sku, accessToken, fetchImpl = fetch) {
 // modern Inventory API is less battle-tested than fixed price in this
 // codebase — expect this to possibly need a debugging round the same way
 // the rest of this integration did, if eBay rejects the shape.
-export function buildOfferBody(sku, draft, categoryId, policies, price, format = "FIXED_PRICE") {
+//
+// options:
+//   buyItNowPrice   - AUCTION only. Optional. Lets buyers skip bidding and
+//                     buy outright. Field name (pricingSummary.buyItNowPrice)
+//                     is my best-confidence guess from eBay's schema, NOT
+//                     verified live yet — flag as a likely debugging spot.
+//   bestOffer       - FIXED_PRICE only. Optional { enabled, minimumPrice }.
+//                     Best Offer is a Fixed-Price-only eBay feature —
+//                     there is no such thing as Best Offer on an auction,
+//                     so this is intentionally ignored when format is
+//                     AUCTION rather than something we need to block.
+//                     listingPolicies.bestOfferTerms field names are also
+//                     unverified live — same caveat as buyItNowPrice.
+export function buildOfferBody(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}) {
   const listingPolicies = {
     fulfillmentPolicyId: policies.fulfillmentPolicyId,
     returnPolicyId: policies.returnPolicyId,
@@ -176,8 +189,20 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
   if (format === "AUCTION") {
     body.pricingSummary = { auctionStartPrice: { value: String(price), currency: "USD" } };
     body.listingDuration = "DAYS_7";
+    if (options.buyItNowPrice) {
+      body.pricingSummary.buyItNowPrice = { value: String(options.buyItNowPrice), currency: "USD" };
+    }
   } else {
     body.pricingSummary = { price: { value: String(price), currency: "USD" } };
+    if (options.bestOffer?.enabled) {
+      body.listingPolicies.bestOfferTerms = { bestOfferEnabled: true };
+      if (options.bestOffer.minimumPrice) {
+        body.listingPolicies.bestOfferTerms.autoDeclinePrice = {
+          value: String(options.bestOffer.minimumPrice),
+          currency: "USD",
+        };
+      }
+    }
   }
 
   return body;
@@ -188,11 +213,11 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
 // these unpublished offers don't reliably show up anywhere in eBay's own
 // Seller Hub UI — see listInventoryItems()/listOffersForSku() below,
 // which back this tool's own drafts list instead.
-export async function createOffer(sku, draft, categoryId, policies, price, accessToken, fetchImpl = fetch) {
+export async function createOffer(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}, accessToken, fetchImpl = fetch) {
   const json = await ebayFetch(
     OFFER_URL,
     accessToken,
-    { method: "POST", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price)) },
+    { method: "POST", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options)) },
     fetchImpl
   );
   return json.offerId;
@@ -206,11 +231,11 @@ export async function getOffer(offerId, accessToken, fetchImpl = fetch) {
   return ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, {}, fetchImpl);
 }
 
-export async function updateOffer(offerId, sku, draft, categoryId, policies, price, format, accessToken, fetchImpl = fetch) {
+export async function updateOffer(offerId, sku, draft, categoryId, policies, price, format, options = {}, accessToken, fetchImpl = fetch) {
   await ebayFetch(
     OFFER_BY_ID_URL(offerId),
     accessToken,
-    { method: "PUT", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format)) },
+    { method: "PUT", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options)) },
     fetchImpl
   );
 }

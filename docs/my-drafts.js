@@ -73,15 +73,31 @@ function editCardHTML(draft) {
 
       <div style="display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap">
         <div>
-          <label>Price (USD)</label>
+          <label>${draft.format === "AUCTION" ? "Starting bid" : "Price"} (USD)</label>
           <input type="number" class="draft-input edit-price" min="0.01" step="0.01" value="${price}" style="max-width: 140px">
         </div>
         <div>
           <label>Listing type</label>
           <select class="draft-input edit-format" style="max-width: 160px">
             <option value="FIXED_PRICE" ${draft.format === "FIXED_PRICE" ? "selected" : ""}>Buy It Now</option>
-            <option value="AUCTION" ${draft.format === "AUCTION" ? "selected" : ""}>Auction</option>
+            <option value="AUCTION" ${draft.format === "AUCTION" ? "selected" : ""}>Auction (7 days)</option>
           </select>
+        </div>
+      </div>
+
+      <div class="edit-auction-fields" style="margin-top: 8px; display: ${draft.format === "AUCTION" ? "block" : "none"}">
+        <label>Buy It Now price (optional — lets buyers skip bidding)</label>
+        <input type="number" class="draft-input edit-bin-price" min="0.01" step="0.01" value="${draft.buyItNowPrice || ""}" style="max-width: 140px">
+      </div>
+
+      <div class="edit-fixedprice-fields" style="margin-top: 8px; display: ${draft.format === "AUCTION" ? "none" : "block"}">
+        <label>
+          <input type="checkbox" class="edit-best-offer-enabled" ${draft.bestOfferEnabled ? "checked" : ""}>
+          Allow Best Offer
+        </label>
+        <div style="margin-top: 4px">
+          <label>Minimum acceptable offer (optional — auto-declines below this)</label>
+          <input type="number" class="draft-input edit-best-offer-min" min="0.01" step="0.01" value="${draft.bestOfferMinimumPrice || ""}" style="max-width: 140px">
         </div>
       </div>
 
@@ -116,6 +132,14 @@ function attachRowHandlers() {
   document.querySelectorAll(".save-edit-btn").forEach((btn) => {
     btn.addEventListener("click", () => handleSaveEdit(btn.dataset.sku));
   });
+  document.querySelectorAll(".edit-format").forEach((select) => {
+    select.addEventListener("change", () => {
+      const row = select.closest(".board-row");
+      const isAuction = select.value === "AUCTION";
+      row.querySelector(".edit-auction-fields").style.display = isAuction ? "block" : "none";
+      row.querySelector(".edit-fixedprice-fields").style.display = isAuction ? "none" : "block";
+    });
+  });
   document.querySelectorAll(".photo-up").forEach((btn) => {
     btn.addEventListener("click", () => movePhoto(btn.dataset.sku, Number(btn.dataset.idx), -1));
   });
@@ -149,6 +173,19 @@ async function handleSaveEdit(sku) {
     return;
   }
 
+  const extra = {};
+  if (format === "AUCTION") {
+    const binVal = row.querySelector(".edit-bin-price").value;
+    if (binVal) extra.buyItNowPrice = parseFloat(binVal);
+  } else {
+    const bestOfferEnabled = row.querySelector(".edit-best-offer-enabled").checked;
+    extra.bestOfferEnabled = bestOfferEnabled;
+    if (bestOfferEnabled) {
+      const minVal = row.querySelector(".edit-best-offer-min").value;
+      if (minVal) extra.bestOfferMinimumPrice = parseFloat(minVal);
+    }
+  }
+
   statusEl.style.color = "var(--muted)";
   statusEl.textContent = "Saving…";
 
@@ -158,7 +195,7 @@ async function handleSaveEdit(sku) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sku, offerId: draft.offerId, title, description,
-        imageUrls: draft.imageUrls, price, format,
+        imageUrls: draft.imageUrls, price, format, ...extra,
       }),
     });
     const json = await res.json();
@@ -167,7 +204,7 @@ async function handleSaveEdit(sku) {
       statusEl.style.color = "var(--sell)";
       return;
     }
-    Object.assign(draft, { title, description, price: { value: String(price), currency: "USD" }, format });
+    Object.assign(draft, { title, description, price: { value: String(price), currency: "USD" }, format, ...extra });
     editingSku = null;
     render();
     setStatus("Draft updated.");
