@@ -99,9 +99,16 @@ export async function uploadImagesToR2(images, bucket, publicBaseUrl) {
   return urls;
 }
 
+// availability.shipToLocationAvailability.quantity lives on the inventory
+// item (separate from the offer's own availableQuantity/pricingSummary).
+// Confirmed live: eBay accepts a Fixed Price offer without it but rejects
+// publishOffer for an Auction with "shipToLocationAvailability quantity
+// insufficient to create auction listings" — set it unconditionally so
+// both formats work rather than special-casing by format.
 export function buildInventoryItemBody(card, draft, imageUrls) {
   return {
     condition: card.is_graded ? "USED_EXCELLENT" : "USED_GOOD",
+    availability: { shipToLocationAvailability: { quantity: 1 } },
     product: {
       title: draft.title,
       description: draft.description,
@@ -141,6 +148,10 @@ export async function getInventoryItem(sku, accessToken, fetchImpl = fetch) {
 export async function updateInventoryItemFields(sku, currentItem, updates, accessToken, fetchImpl = fetch) {
   const body = {
     condition: currentItem.condition,
+    // Preserve it if already set; default to quantity 1 for items created
+    // before this field existed, so editing an old draft doesn't silently
+    // drop the availability a later Auction publish needs.
+    availability: currentItem.availability || { shipToLocationAvailability: { quantity: 1 } },
     product: {
       ...currentItem.product,
       ...(updates.title !== undefined ? { title: updates.title } : {}),
