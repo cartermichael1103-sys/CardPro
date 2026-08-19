@@ -23,6 +23,7 @@ Requires two environment variables (set as GitHub Actions secrets):
 import base64
 import json
 import os
+import statistics
 import sys
 import time
 from datetime import datetime, timezone
@@ -96,11 +97,18 @@ def summarize(listings):
             continue
 
     if not prices:
-        return {"listing_count": 0, "avg_asking_price": None, "min_asking_price": None, "max_asking_price": None}
+        return {
+            "listing_count": 0,
+            "avg_asking_price": None,
+            "median_asking_price": None,
+            "min_asking_price": None,
+            "max_asking_price": None,
+        }
 
     return {
         "listing_count": len(prices),
         "avg_asking_price": round(sum(prices) / len(prices), 2),
+        "median_asking_price": round(statistics.median(prices), 2),
         "min_asking_price": round(min(prices), 2),
         "max_asking_price": round(max(prices), 2),
     }

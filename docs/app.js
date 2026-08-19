@@ -218,6 +218,7 @@ function renderEbay() {
       <td>${p.player}</td>
       <td>${p.sport}</td>
       <td>${p.avg_asking_price != null ? "$" + p.avg_asking_price : "—"}</td>
+      <td>${p.median_asking_price != null ? "$" + p.median_asking_price : "—"}</td>
       <td>${p.min_asking_price != null ? "$" + p.min_asking_price : "—"}</td>
       <td>${p.max_asking_price != null ? "$" + p.max_asking_price : "—"}</td>
       <td>${p.listing_count}</td>

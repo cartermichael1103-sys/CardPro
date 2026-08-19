@@ -78,7 +78,9 @@
       These are current Buy-It-Now <strong>asking</strong> prices, not sold/transacted prices.
       Sellers list optimistically, so actual sale prices typically run lower. Filtered by
       keyword to approximate raw, non-numbered, non-autographed, non-graded cards — this is
-      a best-effort heuristic, not exact classification.
+      a best-effort heuristic, not exact classification. A single outlier listing (misfiled
+      1/1s, wrong category, etc.) can skew the average, so <strong>median</strong> is usually
+      the more trustworthy number at a glance.
     </p>
     <p class="updated" id="ebay-last-updated">Last updated: —</p>
     <table id="ebay-table">
@@ -87,6 +89,7 @@
           <th data-sort="player">Player</th>
           <th data-sort="sport">Sport</th>
           <th data-sort="avg_asking_price">Avg Asking</th>
+          <th data-sort="median_asking_price">Median</th>
           <th data-sort="min_asking_price">Min</th>
           <th data-sort="max_asking_price">Max</th>
           <th data-sort="listing_count">Listings</th>
