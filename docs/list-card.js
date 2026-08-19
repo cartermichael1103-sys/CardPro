@@ -1,6 +1,6 @@
 // Set this to your deployed Cloudflare Worker URL after running
 // `wrangler deploy` from the worker/ directory (see worker/README.md).
-const WORKER_URL = "REPLACE_WITH_YOUR_WORKER_URL";
+const WORKER_URL = "https://cardpro-listing-worker.cartermichael1103.workers.dev";
 
 let selectedImages = []; // [{ data: base64, media_type }]
 
