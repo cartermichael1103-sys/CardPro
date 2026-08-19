@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My eBay Drafts — Sports Card Break Value Index</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <div>
+        <h1>My eBay Drafts</h1>
+        <p class="subtitle">Unpublished offers saved to your eBay account via the New Listing tool</p>
+      </div>
+      <nav class="site-nav">
+        <a href="list-card.html">← New Listing</a>
+      </nav>
+    </div>
+  </header>
+
+  <p class="disclaimer">
+    These exist as real objects in your eBay account but are <strong>not published</strong> — eBay's
+    own website generally won't show you these anywhere (a known gap in how their Inventory API and
+    Seller Hub relate, not something we can fix from here). This page reads them directly from eBay's
+    API instead, so you can review before deciding what to do with each one.
+  </p>
+
+  <div id="worker-not-configured" class="disclaimer" hidden>
+    This page isn't connected to a listing-draft backend yet. Set <code>WORKER_URL</code> at the top of
+    <code>my-drafts.js</code> to your deployed Cloudflare Worker URL.
+  </div>
+
+  <p id="status-msg" class="updated">Loading…</p>
+
+  <div id="drafts-grid" class="board" style="display: none"></div>
+
+  <script src="my-drafts.js"></script>
+</body>
+</html>

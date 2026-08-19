@@ -331,6 +331,12 @@ tr:hover td {
   flex-wrap: wrap;
 }
 
+.site-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .site-nav a {
   color: var(--accent);
   text-decoration: none;
