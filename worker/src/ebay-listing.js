@@ -242,9 +242,19 @@ export async function deleteInventoryItem(sku, accessToken, fetchImpl = fetch) {
 //
 // options:
 //   buyItNowPrice   - AUCTION only. Optional. Lets buyers skip bidding and
-//                     buy outright. Field name (pricingSummary.buyItNowPrice)
-//                     is my best-confidence guess from eBay's schema, NOT
-//                     verified live yet — flag as a likely debugging spot.
+//                     buy outright. Real gotcha hit live: there is no
+//                     `pricingSummary.buyItNowPrice` field — eBay silently
+//                     ignores it (no error, just never persists), which
+//                     is worse than a rejection because it looks like it
+//                     saved fine. The Inventory API reuses the same
+//                     `pricingSummary.price` field FIXED_PRICE offers use
+//                     as the "buy it now" amount on an auction, alongside
+//                     `auctionStartPrice` for the bid floor — confirmed
+//                     by the live error text itself when a payment policy
+//                     with immediate-payment-required rejected a BIN-less
+//                     auction: "...must specify a Buy It Now price",
+//                     citing parameter "FIXED_PRICE", i.e. the same price
+//                     field FIXED_PRICE format populates.
 //   bestOffer       - FIXED_PRICE only. Optional { enabled, minimumPrice }.
 //                     Best Offer is a Fixed-Price-only eBay feature —
 //                     there is no such thing as Best Offer on an auction,
@@ -280,7 +290,7 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
     body.pricingSummary = { auctionStartPrice: { value: String(price), currency: "USD" } };
     body.listingDuration = "DAYS_7";
     if (options.buyItNowPrice) {
-      body.pricingSummary.buyItNowPrice = { value: String(options.buyItNowPrice), currency: "USD" };
+      body.pricingSummary.price = { value: String(options.buyItNowPrice), currency: "USD" };
     }
   } else {
     body.availableQuantity = 1;

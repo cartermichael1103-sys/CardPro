@@ -140,6 +140,35 @@ values. Just trigger the relevant workflow.
   Edit → Save the affected draft once more so it actually picks up the
   now-available location key, then retry Publish** — consistent with
   every fix in this location/availability saga so far.
+- Real gotcha hit live (final piece of this saga, root cause finally
+  confirmed by direct diagnostic evidence rather than a guess): once the
+  location was fixed, publish failed a third way — errorId 25003,
+  `"...invalid price. To require immediate payment, you must specify a
+  Buy It Now price"` — on a pure 7-day Auction (no BIN was ever intended
+  at creation) whose account has a payment policy requiring immediate
+  payment, which eBay can only enforce if a buyer has a non-bidding way
+  to pay. User added a Buy It Now price via Edit → Save (confirmed via
+  `/api/offer-status` that the *starting* price update DID persist, so
+  the save pathway itself works) but `pricingSummary` still showed no
+  BIN-related field at all afterward — twice, with two different values
+  ($3.99 draft still showing no BIN, then explicitly re-tested with
+  $5.99, same result. **eBay was silently dropping the field, not
+  erroring on it** — worse than a rejection, since it looks like it
+  saved fine. Root cause: `pricingSummary.buyItNowPrice` never existed
+  as a real field on the Inventory API's Offer resource; there is no
+  dedicated BIN field for auctions at all. eBay's Auction+BuyItNow
+  reuses the same `pricingSummary.price` field FIXED_PRICE offers use —
+  confirmed by the error text itself citing parameter `"FIXED_PRICE"`
+  when the field was missing, i.e. eBay's immediate-payment check reads
+  the generic `price` field regardless of format. Fixed in
+  `buildOfferBody()`: an Auction's Buy It Now price now sets
+  `pricingSummary.price` (alongside `auctionStartPrice`, not replacing
+  it) instead of a `pricingSummary.buyItNowPrice` key. The `options.
+  buyItNowPrice` name in this codebase (frontend request field,
+  `buildOfferOptionsFromRequest()`) is unchanged — only the eBay-facing
+  field inside `buildOfferBody()` moved. **Same pattern as every fix in
+  this saga: the affected draft needs Edit → Save once more to pick up
+  the corrected field, then retry Publish.**
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
