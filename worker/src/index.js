@@ -236,6 +236,12 @@ async function handleOfferStatus(request, env, origin) {
       clientSecret: env.EBAY_CLIENT_SECRET,
     });
     const offer = await getOffer(offerId, accessToken);
+    // Diagnostic for the "No Item.Country" publish error: shows whether a
+    // merchantLocationKey actually made it onto the offer, and separately
+    // whether the account has ANY location registered at all under the
+    // Inventory API (a different, and often empty, place from anything a
+    // seller sets up in classic Seller Hub).
+    const locationKey = await getMerchantLocationKey(accessToken).catch((e) => `NONE FOUND: ${e.message}`);
     return jsonResponse(
       {
         offerId: offer.offerId,
@@ -243,6 +249,8 @@ async function handleOfferStatus(request, env, origin) {
         status: offer.status,
         listingId: offer.listing?.listingId ?? null,
         price: offer.pricingSummary?.price ?? null,
+        merchantLocationKeyOnOffer: offer.merchantLocationKey ?? null,
+        merchantLocationKeyAvailable: locationKey,
         note: offer.status === "PUBLISHED"
           ? "This offer is PUBLISHED — either you published it yourself via My eBay Drafts, or something published it outside this tool. Investigate if you didn't do this."
           : "Not published — draft only, still safe.",
