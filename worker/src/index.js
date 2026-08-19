@@ -91,7 +91,7 @@ async function handleOAuthCallback(request, env) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const redirectBase = env.ALLOWED_ORIGIN + "/list-card.html";
+  const redirectBase = env.SITE_BASE_URL + "/list-card.html";
 
   if (!code || !state) {
     return Response.redirect(`${redirectBase}?ebay_error=missing_code_or_state`, 302);
