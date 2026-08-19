@@ -5,6 +5,8 @@ import {
   getCategoryId,
   getBusinessPolicies,
   getMerchantLocationKey,
+  getMerchantLocation,
+  createMerchantLocation,
   uploadImagesToR2,
   createInventoryItem,
   createOffer,
@@ -382,6 +384,60 @@ async function handlePublishDraft(request, env, origin) {
   }
 }
 
+async function handleLocationStatus(env, origin) {
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    const location = await getMerchantLocation(accessToken);
+    return jsonResponse({ configured: Boolean(location), location }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Checking shipping location failed: " + e.message }, 502, origin);
+  }
+}
+
+async function handleSetupLocation(request, env, origin) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return jsonResponse({ error: "Invalid JSON body" }, 400, origin);
+  }
+
+  const { addressLine1, city, stateOrProvince, postalCode, country } = body;
+  if (!addressLine1 || !city || !stateOrProvince || !postalCode || !country) {
+    return jsonResponse(
+      { error: "`addressLine1`, `city`, `stateOrProvince`, `postalCode`, and `country` are all required" },
+      400,
+      origin
+    );
+  }
+
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    const merchantLocationKey = await createMerchantLocation(body, accessToken);
+    return jsonResponse({ message: "Shipping location saved.", merchantLocationKey }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Saving shipping location failed: " + e.message }, 502, origin);
+  }
+}
+
 async function handleDeleteDraft(request, env, origin) {
   const url = new URL(request.url);
   const sku = url.searchParams.get("sku");
@@ -448,6 +504,12 @@ export default {
       }
       if (url.pathname === "/api/publish-draft" && request.method === "POST") {
         return await handlePublishDraft(request, env, origin);
+      }
+      if (url.pathname === "/api/location-status" && request.method === "GET") {
+        return await handleLocationStatus(env, origin);
+      }
+      if (url.pathname === "/api/setup-location" && request.method === "POST") {
+        return await handleSetupLocation(request, env, origin);
       }
     } catch (e) {
       return jsonResponse({ error: "Unexpected server error: " + e.message }, 500, origin);

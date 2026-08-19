@@ -109,12 +109,37 @@ values. Just trigger the relevant workflow.
   at save and edit time (`.catch(() => undefined)`) rather than a hard
   requirement like Business Policies — a seller with zero locations
   configured can still save and review a draft, it just won't publish
-  until they set one up (Seller Hub → Shipping preferences → Item
-  location, exact path varies by account) and re-save. **Same pattern as
-  the two fixes above: an existing draft that predates this fix needs
-  Edit → Save once to pick up the location key before Publish will work
-  — and if the seller truly has no location configured yet,
-  `getMerchantLocationKey()`'s error message is what should surface.**
+  until they set one up and re-save. (Original text here guessed "Seller
+  Hub → Shipping preferences → Item location" as the fix path — see the
+  next entry, that guess was wrong.)
+- Real gotcha hit live (this is where the location story actually
+  resolved): the merchantLocationKey fix above did NOT fix the user's
+  draft — same identical "No Item.Country" error persisted even after a
+  confirmed redeploy + Edit→Save. Added `merchantLocationKeyOnOffer` /
+  `merchantLocationKeyAvailable` diagnostic fields to
+  `GET /api/offer-status` rather than guessing a third time, and the
+  user confirmed via that endpoint: `merchantLocationKeyAvailable` was
+  `"NONE FOUND"` — **this eBay account has zero locations registered
+  under the Inventory Location API, and there is no field anywhere in
+  eBay's normal seller dashboard (Seller Hub, Business Policies, etc.)
+  to fix this** — confirmed by the user directly, not assumed. It's a
+  genuinely API-only resource with no UI equivalent, same category of
+  gap as the "drafts don't show up in Seller Hub" issue earlier in this
+  build. Since this tool can't know the user's real address, it now
+  offers to create the location itself: a **Shipping Location** section
+  on `docs/my-drafts.html` (address form, only shown once eBay is
+  connected) calls a new `POST /api/setup-location` →
+  `createMerchantLocation()` in `ebay-listing.js`, which does
+  `POST /sell/inventory/v1/location/{merchantLocationKeyValue}` with a
+  fixed key (`cardpro-default-location`, since this tool only ever needs
+  one location) — NOT yet verified against the live API. The address
+  entered is sent straight to eBay and not stored anywhere else by this
+  tool (noted in `docs/privacy.html` too). `getMerchantLocationKey()`'s
+  error message now points at this new UI instead of the incorrect
+  Seller Hub guess. **After the user sets this up, they'll still need to
+  Edit → Save the affected draft once more so it actually picks up the
+  now-available location key, then retry Publish** — consistent with
+  every fix in this location/availability saga so far.
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
