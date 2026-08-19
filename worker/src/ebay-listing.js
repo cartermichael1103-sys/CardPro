@@ -126,23 +126,61 @@ export async function createInventoryItem(sku, card, draft, imageUrls, accessTok
   );
 }
 
-export function buildOfferBody(sku, draft, categoryId, policies, price) {
+export async function getInventoryItem(sku, accessToken, fetchImpl = fetch) {
+  return ebayFetch(INVENTORY_ITEM_URL(sku), accessToken, {}, fetchImpl);
+}
+
+// createOrReplaceInventoryItem is an upsert, so editing is the same call
+// as creating — but an edit only has title/description/photo order to
+// change, not a fresh card identification, so this merges onto the
+// currently-stored item (preserving condition and aspects) rather than
+// rebuilding from a card object.
+export async function updateInventoryItemFields(sku, currentItem, updates, accessToken, fetchImpl = fetch) {
+  const body = {
+    condition: currentItem.condition,
+    product: {
+      ...currentItem.product,
+      ...(updates.title !== undefined ? { title: updates.title } : {}),
+      ...(updates.description !== undefined ? { description: updates.description } : {}),
+      ...(updates.imageUrls !== undefined ? { imageUrls: updates.imageUrls } : {}),
+    },
+  };
+  await ebayFetch(INVENTORY_ITEM_URL(sku), accessToken, { method: "PUT", body: JSON.stringify(body) }, fetchImpl);
+}
+
+export async function deleteInventoryItem(sku, accessToken, fetchImpl = fetch) {
+  await ebayFetch(INVENTORY_ITEM_URL(sku), accessToken, { method: "DELETE" }, fetchImpl);
+}
+
+// format: "FIXED_PRICE" (default) or "AUCTION". Auction support in the
+// modern Inventory API is less battle-tested than fixed price in this
+// codebase — expect this to possibly need a debugging round the same way
+// the rest of this integration did, if eBay rejects the shape.
+export function buildOfferBody(sku, draft, categoryId, policies, price, format = "FIXED_PRICE") {
   const listingPolicies = {
     fulfillmentPolicyId: policies.fulfillmentPolicyId,
     returnPolicyId: policies.returnPolicyId,
   };
   if (policies.paymentPolicyId) listingPolicies.paymentPolicyId = policies.paymentPolicyId;
 
-  return {
+  const body = {
     sku,
     marketplaceId: MARKETPLACE_ID,
-    format: "FIXED_PRICE",
+    format,
     availableQuantity: 1,
     categoryId,
     listingDescription: draft.description,
     listingPolicies,
-    pricingSummary: { price: { value: String(price), currency: "USD" } },
   };
+
+  if (format === "AUCTION") {
+    body.pricingSummary = { auctionStartPrice: { value: String(price), currency: "USD" } };
+    body.listingDuration = "DAYS_7";
+  } else {
+    body.pricingSummary = { price: { value: String(price), currency: "USD" } };
+  }
+
+  return body;
 }
 
 // Creates the Offer but deliberately never calls publishOffer — this is
@@ -166,6 +204,28 @@ export async function createOffer(sku, draft, categoryId, policies, price, acces
 // classic listings.
 export async function getOffer(offerId, accessToken, fetchImpl = fetch) {
   return ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, {}, fetchImpl);
+}
+
+export async function updateOffer(offerId, sku, draft, categoryId, policies, price, format, accessToken, fetchImpl = fetch) {
+  await ebayFetch(
+    OFFER_BY_ID_URL(offerId),
+    accessToken,
+    { method: "PUT", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format)) },
+    fetchImpl
+  );
+}
+
+export async function deleteOffer(offerId, accessToken, fetchImpl = fetch) {
+  await ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, { method: "DELETE" }, fetchImpl);
+}
+
+// Deletes both halves of a draft. Offer must go first — eBay won't let you
+// delete an inventory item that a live offer still references.
+export async function deleteDraft(sku, offerId, accessToken, fetchImpl = fetch) {
+  if (offerId) {
+    await deleteOffer(offerId, accessToken, fetchImpl);
+  }
+  await deleteInventoryItem(sku, accessToken, fetchImpl);
 }
 
 export async function listInventoryItems(accessToken, limit = 25, fetchImpl = fetch) {
@@ -205,7 +265,8 @@ export async function listDrafts(accessToken, fetchImpl = fetch) {
       imageUrls: item.product?.imageUrls ?? [],
       offerId: offer?.offerId ?? null,
       status: offer?.status ?? "NO_OFFER",
-      price: offer?.pricingSummary?.price ?? null,
+      format: offer?.format ?? "FIXED_PRICE",
+      price: offer?.pricingSummary?.price ?? offer?.pricingSummary?.auctionStartPrice ?? null,
     });
   }
   return drafts;

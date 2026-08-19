@@ -80,6 +80,41 @@ values. Just trigger the relevant workflow.
   worse than just an API-cost risk. `worker/README.md` recommends
   Cloudflare rate limiting / Access; check whether the user has set
   that up before treating this as a low-risk public deployment.
+- Real gotcha hit and fixed live: `get_default_category_tree_id` is a
+  top-level Taxonomy API resource, NOT nested under `/category_tree/`
+  (unlike `get_category_suggestions`, which is) — an extra path
+  segment caused a 404 where eBay parsed the operation name itself as
+  the tree ID. Also: Taxonomy API calls need an **application** token
+  (client_credentials), not the user OAuth token — the user token's
+  scopes don't cover it, confirmed via a live 403.
+- Real gotcha: eBay's Inventory API (SKU-based offers, what this tool
+  uses) does NOT reliably show up anywhere in eBay's own Seller Hub
+  website — confirmed live, user couldn't find a created draft
+  anywhere on ebay.com. This isn't a bug or something fixable from
+  our side; it's how eBay's platform works (their own docs/community
+  confirm: API-created drafts aren't editable/visible via the website
+  until published). This is why `docs/my-drafts.html` /
+  `GET /api/drafts` exist — they read drafts back from the API
+  directly since eBay's site can't show them. Commercial cross-listing
+  tools (Vendoo, List Perfectly, etc.) work around this exact same gap
+  the same way — this isn't a workaround for a broken approach, it's
+  the standard architecture for this problem.
+- As of the same date, `docs/my-drafts.html` also supports editing
+  (title/description/price/format) and deleting drafts, plus
+  reordering photos — via `PUT /api/draft` and `DELETE /api/draft`.
+  Editing preserves the original `condition`/`aspects` on the
+  inventory item (merges partial updates rather than replacing
+  wholesale) and re-fetches business policies fresh each time in case
+  they changed. AUCTION format support (`listingDuration: "DAYS_7"`,
+  `auctionStartPrice` instead of `price`) is untested against the live
+  API — flag this as another likely debugging-round candidate if the
+  user tries switching a draft to Auction.
+- A real routing bug was caught before shipping (not by the user):
+  the `/api/drafts` handler was written but never wired into the
+  Worker's route table, so it 404'd. Caught by an integration test
+  that hit the actual route rather than just unit-testing the handler
+  function in isolation — worth remembering when adding future routes
+  here, since this class of bug won't show up in a function-level test.
 
 ## Gotchas
 
