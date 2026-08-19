@@ -12,6 +12,8 @@ const INVENTORY_ITEMS_LIST_URL = "https://api.ebay.com/sell/inventory/v1/invento
 const LOCATION_URL = "https://api.ebay.com/sell/inventory/v1/location";
 const LOCATION_BY_KEY_URL = (key) => `https://api.ebay.com/sell/inventory/v1/location/${encodeURIComponent(key)}`;
 const DEFAULT_LOCATION_KEY = "cardpro-default-location";
+const CONDITION_POLICIES_URL = (categoryId) =>
+  `https://api.ebay.com/sell/metadata/v1/marketplace/${MARKETPLACE_ID}/get_item_condition_policies?filter=categoryIds:${encodeURIComponent(categoryId)}`;
 const MARKETPLACE_ID = "EBAY_US";
 
 async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
@@ -58,6 +60,58 @@ export async function getCategoryId(searchQuery, accessToken, fetchImpl = fetch)
     throw new Error(`No eBay category suggestions found for "${searchQuery}"`);
   }
   return suggestions[0].category.categoryId;
+}
+
+// Fixed, documented mapping from eBay's classic numeric conditionId to the
+// Inventory API's ConditionEnum string — this mapping itself is constant
+// across all categories; what varies BY category is which subset of these
+// IDs is actually allowed.
+const CONDITION_ID_TO_ENUM = {
+  1000: "NEW",
+  1500: "NEW_OTHER",
+  1750: "NEW_WITH_DEFECTS",
+  2000: "CERTIFIED_REFURBISHED",
+  2010: "EXCELLENT_REFURBISHED",
+  2020: "VERY_GOOD_REFURBISHED",
+  2030: "GOOD_REFURBISHED",
+  2500: "SELLER_REFURBISHED",
+  2750: "LIKE_NEW",
+  3000: "USED_EXCELLENT",
+  4000: "USED_VERY_GOOD",
+  5000: "USED_GOOD",
+  6000: "USED_ACCEPTABLE",
+  7000: "FOR_PARTS_OR_NOT_WORKING",
+};
+
+// Best-to-acceptable preference order for picking a condition among
+// whichever of the above a category actually allows, since a coarse
+// is_graded flag doesn't map cleanly onto one specific tier.
+const GRADED_CONDITION_PREFERENCE = ["LIKE_NEW", "USED_EXCELLENT", "NEW", "USED_VERY_GOOD", "USED_GOOD", "USED_ACCEPTABLE"];
+const UNGRADED_CONDITION_PREFERENCE = ["USED_VERY_GOOD", "USED_GOOD", "USED_EXCELLENT", "USED_ACCEPTABLE", "LIKE_NEW", "NEW"];
+
+// Real gotcha hit live: this tool originally hardcoded `condition` as
+// USED_GOOD (ungraded) / USED_EXCELLENT (graded) — eBay rejected
+// USED_GOOD outright for the "Trading Card Singles" category with
+// errorId 25021 ("condition id 5000 is invalid for the selected primary
+// category id"), meaning that category only allows a specific subset of
+// the general condition scale, not the generic guess this tool started
+// with. Rather than hardcode a different guess, this asks eBay's own
+// Metadata API which condition IDs are actually valid for the resolved
+// category and picks the closest available match — the same pattern as
+// getBusinessPolicies()/getMerchantLocationKey() reading real account
+// state instead of assuming.
+export async function getConditionForCategory(categoryId, isGraded, accessToken, fetchImpl = fetch) {
+  const fallback = isGraded ? "USED_EXCELLENT" : "USED_GOOD";
+  const json = await ebayFetch(CONDITION_POLICIES_URL(categoryId), accessToken, {}, fetchImpl).catch(() => null);
+  const conditions = json?.itemConditionPolicies?.[0]?.itemConditions || [];
+  const validEnums = conditions
+    .map((c) => CONDITION_ID_TO_ENUM[Number(c.conditionId)])
+    .filter(Boolean);
+
+  if (validEnums.length === 0) return fallback;
+
+  const preference = isGraded ? GRADED_CONDITION_PREFERENCE : UNGRADED_CONDITION_PREFERENCE;
+  return preference.find((enumName) => validEnums.includes(enumName)) || validEnums[0];
 }
 
 // Fetches the seller's existing business policies and returns the first of
@@ -165,9 +219,9 @@ export async function uploadImagesToR2(images, bucket, publicBaseUrl) {
 // publishOffer for an Auction with "shipToLocationAvailability quantity
 // insufficient to create auction listings" — set it unconditionally so
 // both formats work rather than special-casing by format.
-export function buildInventoryItemBody(card, draft, imageUrls) {
+export function buildInventoryItemBody(card, draft, imageUrls, condition) {
   return {
-    condition: card.is_graded ? "USED_EXCELLENT" : "USED_GOOD",
+    condition: condition || (card.is_graded ? "USED_EXCELLENT" : "USED_GOOD"),
     availability: { shipToLocationAvailability: { quantity: 1 } },
     product: {
       title: draft.title,
@@ -187,11 +241,11 @@ export function buildInventoryItemBody(card, draft, imageUrls) {
   };
 }
 
-export async function createInventoryItem(sku, card, draft, imageUrls, accessToken, fetchImpl = fetch) {
+export async function createInventoryItem(sku, card, draft, imageUrls, condition, accessToken, fetchImpl = fetch) {
   await ebayFetch(
     INVENTORY_ITEM_URL(sku),
     accessToken,
-    { method: "PUT", body: JSON.stringify(buildInventoryItemBody(card, draft, imageUrls)) },
+    { method: "PUT", body: JSON.stringify(buildInventoryItemBody(card, draft, imageUrls, condition)) },
     fetchImpl
   );
 }
@@ -219,7 +273,7 @@ export async function updateInventoryItemFields(sku, currentItem, updates, acces
     : { shipToLocationAvailability: { quantity: 1 } };
 
   const body = {
-    condition: currentItem.condition,
+    condition: updates.condition !== undefined ? updates.condition : currentItem.condition,
     availability,
     product: {
       ...currentItem.product,

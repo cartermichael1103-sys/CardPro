@@ -169,6 +169,38 @@ values. Just trigger the relevant workflow.
   field inside `buildOfferBody()` moved. **Same pattern as every fix in
   this saga: the affected draft needs Edit → Save once more to pick up
   the corrected field, then retry Publish.**
+- Real gotcha hit live (next link in the same publish-debugging chain,
+  once price was fixed): errorId 25021, `"...invalid item condition
+  information. The provided condition id is invalid for the selected
+  primary category id"`, parameters citing `5000` (the classic numeric
+  ID for `USED_GOOD`) against category `"Trading Card Singles"`. Root
+  cause: `buildInventoryItemBody()` originally hardcoded
+  `condition: card.is_graded ? "USED_EXCELLENT" : "USED_GOOD"` — a guess
+  from the general condition scale that Trading Card Singles apparently
+  doesn't accept at all (that category only allows some subset of the
+  ~14 standard condition IDs, and 5000 isn't in it for this account).
+  Rather than hardcode a different guess a second time, added
+  `getConditionForCategory()` in `ebay-listing.js`: calls eBay's
+  Metadata API (`GET /sell/metadata/v1/marketplace/{id}/
+  get_item_condition_policies?filter=categoryIds:{categoryId}`, an
+  app-token call like Taxonomy) to get the category's actually-allowed
+  numeric condition IDs, maps them back to `ConditionEnum` strings via a
+  fixed, documented numeric-ID→enum table (`CONDITION_ID_TO_ENUM` —
+  this table itself is NOT category-specific, only which subset of it a
+  category allows varies), and picks the best match by preference order
+  (`GRADED_CONDITION_PREFERENCE`/`UNGRADED_CONDITION_PREFERENCE`),
+  falling back to the old hardcoded guess only if the metadata call
+  fails entirely. Wired into both `handleSaveDraft` (knows
+  `card.is_graded` from the original AI identification) and
+  `handleUpdateDraft` (doesn't retain `is_graded` past creation, so
+  assumes ungraded — this doubles as the self-heal path for drafts
+  whose condition eBay already rejected, same pattern as the
+  availability/location self-heals above). **Not yet confirmed against
+  the live API — the preference-order heuristic and the ID→enum table
+  itself are both best-confidence guesses; if this doesn't resolve it,
+  the next debugging step should be inspecting the raw
+  `itemConditionPolicies` response for this exact category rather than
+  guessing further.**
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token

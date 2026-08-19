@@ -7,6 +7,7 @@ import {
   getMerchantLocationKey,
   getMerchantLocation,
   createMerchantLocation,
+  getConditionForCategory,
   uploadImagesToR2,
   createInventoryItem,
   createOffer,
@@ -200,9 +201,13 @@ async function handleSaveDraft(request, env, origin) {
     // configured yet can still save/review a draft — it just won't
     // publish until they set one up and re-save.
     const merchantLocationKey = await getMerchantLocationKey(accessToken).catch(() => undefined);
+    // Trading card categories often reject the generic USED_GOOD/
+    // USED_EXCELLENT guess — see getConditionForCategory()'s comment.
+    // Metadata API is app-level, same token as category lookup above.
+    const condition = await getConditionForCategory(categoryId, Boolean(body.card.is_graded), appToken);
 
     const sku = crypto.randomUUID();
-    await createInventoryItem(sku, body.card, body.draft, imageUrls, accessToken);
+    await createInventoryItem(sku, body.card, body.draft, imageUrls, condition, accessToken);
     const offerId = await createOffer(sku, body.draft, categoryId, policies, price, format, offerOptions, merchantLocationKey, accessToken);
 
     return jsonResponse(
@@ -324,7 +329,21 @@ async function handleUpdateDraft(request, env, origin) {
       getOffer(offerId, accessToken),
     ]);
 
-    await updateInventoryItemFields(sku, currentItem, { title, description, imageUrls }, accessToken);
+    // Taxonomy/Metadata APIs need an application token, not the user
+    // token — see getCategoryId()'s comment in handleSaveDraft.
+    const appToken = await getApplicationToken({
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    // Re-resolve on every edit rather than only backfilling when unset —
+    // an existing draft may have a condition eBay has already rejected
+    // (see getConditionForCategory()'s comment), so this doubles as the
+    // self-heal path for drafts created before that fix. is_graded isn't
+    // retained past initial card identification, so this assumes
+    // ungraded — still strictly better than leaving a known-bad value.
+    const condition = await getConditionForCategory(currentOffer.categoryId, false, appToken)
+      .catch(() => currentItem.condition);
+    await updateInventoryItemFields(sku, currentItem, { title, description, imageUrls, condition }, accessToken);
 
     const policies = await getBusinessPolicies(accessToken);
     const chosenFormat = format || currentOffer.format || "FIXED_PRICE";
