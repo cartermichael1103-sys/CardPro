@@ -24,7 +24,9 @@ async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
 
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
-    throw new Error(`eBay API ${options.method || "GET"} ${url} -> ${resp.status}: ${text.slice(0, 500)}`);
+    const err = new Error(`eBay API ${options.method || "GET"} ${url} -> ${resp.status}: ${text.slice(0, 500)}`);
+    err.status = resp.status;
+    throw err;
   }
 
   if (resp.status === 204) return null;
@@ -263,14 +265,23 @@ export async function listInventoryItems(accessToken, limit = 25, fetchImpl = fe
   return json.inventoryItems || [];
 }
 
+// eBay returns a 404 (not an empty list) when an inventory item has no
+// offer at all — e.g. one where createOffer never completed. That's a
+// legitimate state for a draft to be in, not a real failure, so it's
+// treated the same as "no offers found" rather than thrown.
 export async function listOffersForSku(sku, accessToken, fetchImpl = fetch) {
-  const json = await ebayFetch(
-    `${OFFER_URL}?sku=${encodeURIComponent(sku)}`,
-    accessToken,
-    {},
-    fetchImpl
-  );
-  return json.offers || [];
+  try {
+    const json = await ebayFetch(
+      `${OFFER_URL}?sku=${encodeURIComponent(sku)}`,
+      accessToken,
+      {},
+      fetchImpl
+    );
+    return json.offers || [];
+  } catch (e) {
+    if (e.status === 404) return [];
+    throw e;
+  }
 }
 
 // Combines inventory items (title/description/photos live here) with
