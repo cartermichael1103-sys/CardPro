@@ -26,13 +26,8 @@ export async function getEbayToken(clientId, clientSecret, fetchImpl = fetch) {
   return json.access_token;
 }
 
-// Builds a search query tailored to the SPECIFIC card identified, unlike
-// the site's general asking-price index (pull_ebay_prices.py) which always
-// excludes numbered/auto/graded to approximate a generic raw-card baseline.
-// Here we want comps for exactly what the user actually has.
-export function buildQuery(card) {
-  const terms = [card.player, card.year, card.brand, card.parallel].filter(Boolean);
-  terms.push("card");
+function modifierTerms(card) {
+  const terms = [];
 
   if (card.is_autograph) {
     terms.push("auto");
@@ -55,11 +50,29 @@ export function buildQuery(card) {
     terms.push("-psa", "-bgs", "-sgc", "-csg", "-graded");
   }
 
+  return terms;
+}
+
+// Narrow, ideally-precise query: requires the player AND year AND brand AND
+// parallel to all match. Real eBay listing titles are inconsistent about
+// wording (especially for less common parallel names), so this can easily
+// return zero results even when comparable listings genuinely exist.
+export function buildSpecificQuery(card) {
+  const terms = [card.player, card.year, card.brand, card.parallel].filter(Boolean);
+  terms.push("card", ...modifierTerms(card));
   return terms.join(" ");
 }
 
-export async function fetchComps(card, token, fetchImpl = fetch) {
-  const query = buildQuery(card);
+// Fallback query: just the player name plus the same auto/numbered/graded
+// modifiers, mirroring the approach pull_ebay_prices.py already uses
+// successfully for the general asking-price index. Broader, but far less
+// likely to return nothing.
+export function buildBroadQuery(card) {
+  const terms = [card.player, "card", ...modifierTerms(card)].filter(Boolean);
+  return terms.join(" ");
+}
+
+export async function searchListings(query, card, token, fetchImpl = fetch) {
   const buyingOptions = card.is_graded ? "FIXED_PRICE|AUCTION" : "FIXED_PRICE";
   const params = new URLSearchParams({
     q: query,
@@ -80,7 +93,21 @@ export async function fetchComps(card, token, fetchImpl = fetch) {
   }
 
   const json = await resp.json();
-  return { listings: json.itemSummaries || [], query };
+  return json.itemSummaries || [];
+}
+
+// Tries the specific query first; if it comes back empty, retries with the
+// broader one so the user gets *some* pricing signal rather than nothing.
+export async function fetchComps(card, token, fetchImpl = fetch) {
+  const specificQuery = buildSpecificQuery(card);
+  let listings = await searchListings(specificQuery, card, token, fetchImpl);
+  if (listings.length > 0) {
+    return { listings, query: specificQuery, broadened: false };
+  }
+
+  const broadQuery = buildBroadQuery(card);
+  listings = await searchListings(broadQuery, card, token, fetchImpl);
+  return { listings, query: broadQuery, broadened: true };
 }
 
 function median(sortedNums) {

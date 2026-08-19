@@ -63,12 +63,14 @@ async function handleDraftListing(request, env, origin) {
 
   let comps = { listing_count: 0, avg_asking_price: null, median_asking_price: null, min_asking_price: null, max_asking_price: null };
   let compsQuery = null;
+  let compsBroadened = false;
   if (card.player) {
     try {
       const token = await getEbayToken(env.EBAY_CLIENT_ID, env.EBAY_CLIENT_SECRET);
-      const { listings, query } = await fetchComps(card, token);
+      const { listings, query, broadened } = await fetchComps(card, token);
       comps = summarizeComps(listings);
       compsQuery = query;
+      compsBroadened = broadened;
     } catch (e) {
       // Comps are best-effort — still return the card ID + a draft without pricing
       comps.error = "Comp lookup failed: " + e.message;
@@ -80,7 +82,12 @@ async function handleDraftListing(request, env, origin) {
   return jsonResponse(
     {
       identified: card,
-      comps: { ...comps, query: compsQuery, note: "eBay active Buy-It-Now asking prices, not sold/transacted prices." },
+      comps: {
+        ...comps,
+        query: compsQuery,
+        broadened: compsBroadened,
+        note: "eBay active Buy-It-Now asking prices, not sold/transacted prices.",
+      },
       draft,
     },
     200,
