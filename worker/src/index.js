@@ -249,8 +249,11 @@ async function handleOfferStatus(request, env, origin) {
         offerId: offer.offerId,
         sku: offer.sku,
         status: offer.status,
+        format: offer.format,
         listingId: offer.listing?.listingId ?? null,
         price: offer.pricingSummary?.price ?? null,
+        pricingSummary: offer.pricingSummary ?? null,
+        availableQuantity: offer.availableQuantity ?? null,
         merchantLocationKeyOnOffer: offer.merchantLocationKey ?? null,
         merchantLocationKeyAvailable: locationKey,
         note: offer.status === "PUBLISHED"
