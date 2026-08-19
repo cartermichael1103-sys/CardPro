@@ -34,16 +34,26 @@ values. Just trigger the relevant workflow.
   set to the deployed `*.workers.dev` URL after running `wrangler deploy`
   — check whether this still says `REPLACE_WITH_YOUR_WORKER_URL` before
   assuming the feature is live.
-- Comps here use a per-request eBay search tailored to the specific
-  identified card (may include numbered/auto/graded terms if that's
-  what the card actually is), unlike `pull_ebay_prices.py` which always
-  excludes those to build a general raw-card baseline index — different
-  query logic in each case is intentional, not a bug.
+- As of 2026-08-19, this tool does NOT do eBay comps/pricing — that was
+  tried (`worker/src/comps.js`, now deleted) but the per-card search
+  was too unreliable (real listing titles don't reliably contain
+  year+brand+parallel together, so it often returned zero results even
+  with a broadened fallback query). The user explicitly chose to drop
+  it rather than fix it further, in favor of speed: the tool now only
+  does card ID + title/description. See git history before this date
+  if reviving comps.
 - The Worker never calls eBay's listing-creation APIs — it only
-  generates a draft (title/description/price) for the user to copy and
+  generates a draft (title/description) for the user to copy and
   publish manually. Don't add auto-publish without the user explicitly
   asking for it; it was deliberately scoped out due to the risk of a
-  bad AI-identified detail going live as a real listing.
+  bad AI-identified detail going live as a real listing. The user has
+  since asked about actually saving to their eBay account as a draft
+  (not published) — this is a distinct, much bigger feature requiring
+  eBay's user-login OAuth flow, refresh token storage, and probably
+  Cloudflare R2 for image hosting (eBay's Inventory API needs image
+  URLs, not raw uploads). Scope this out explicitly with the user
+  before building — don't assume "save as draft" means auto-publish,
+  and don't assume it's a small addition to the current Worker.
 
 ## Gotchas
 

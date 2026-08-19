@@ -68,14 +68,13 @@ so treat this as a directional signal, not real comps.
 
 ### 6. (Optional) Set up the New Listing draft tool
 The "+ New Listing" page (`docs/list-card.html`) lets you upload photos of a
-card and get an AI-generated card ID, current eBay comps, and a ready-to-copy
-listing draft (title/description/suggested price). It never posts to eBay
-for you — you review and paste the draft in yourself.
+card and get an AI-generated card ID and a ready-to-copy listing draft
+(title/description). It never posts to eBay for you — you review and paste
+the draft in yourself.
 
 This needs a small backend (a Cloudflare Worker) since photo analysis can't
 run in a static site. See **`worker/README.md`** for full setup — it needs
-your own Cloudflare account (free tier), an Anthropic API key, and reuses
-the same eBay Production credentials from step 5.
+your own Cloudflare account (free tier) and an Anthropic API key.
 
 ## Day-to-day use
 
@@ -109,7 +108,7 @@ scripts/
   update-data.yml         ← manual-only trigger (workflow_dispatch)
   update-ebay-prices.yml  ← manual-only trigger (workflow_dispatch)
 worker/                   ← Cloudflare Worker backend for list-card.html
-  src/index.js, card-analysis.js, comps.js, draft.js
+  src/index.js, card-analysis.js, draft.js
   README.md              ← deployment steps (needs your own Cloudflare account)
 ```
 

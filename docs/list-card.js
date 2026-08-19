@@ -52,7 +52,6 @@ function fieldRow(label, value) {
 
 function renderResult(payload) {
   const card = payload.identified;
-  const comps = payload.comps;
   const draft = payload.draft;
 
   document.getElementById("result-panel").hidden = false;
@@ -75,28 +74,12 @@ function renderResult(payload) {
     fieldRow("Graded", card.is_graded ? `${card.grading_company || ""} ${card.grade || ""}`.trim() : "No (raw)"),
   ].join("");
 
-  if (comps.error) {
-    document.getElementById("comps-summary").textContent = "Comp lookup failed: " + comps.error;
-  } else if (comps.listing_count === 0) {
-    document.getElementById("comps-summary").textContent = "No comparable active listings found, even with a broadened search.";
-  } else {
-    const broadenedNote = comps.broadened
-      ? " (no exact match for the specific year/brand/parallel, so this is a broader player-level search — treat it as a rougher signal.)"
-      : "";
-    document.getElementById("comps-summary").textContent =
-      `${comps.listing_count} comparable active listings — ` +
-      `avg $${comps.avg_asking_price}, median $${comps.median_asking_price}, ` +
-      `range $${comps.min_asking_price}–$${comps.max_asking_price}.${broadenedNote} ${comps.note}`;
-  }
-
   document.getElementById("draft-photos").innerHTML = selectedImages
     .map((img) => `<img class="preview-thumb" src="data:${img.media_type};base64,${img.data}">`)
     .join("");
 
   document.getElementById("draft-title").value = draft.title;
   document.getElementById("draft-description").value = draft.description;
-  document.getElementById("draft-price").textContent =
-    draft.suggested_price != null ? `$${draft.suggested_price} (${draft.price_basis})` : "No comps available";
 }
 
 async function handleAnalyze() {
@@ -107,7 +90,7 @@ async function handleAnalyze() {
   }
 
   document.getElementById("analyze-btn").disabled = true;
-  setStatus("Analyzing photo(s) and fetching comps — this can take 10-20 seconds...");
+  setStatus("Identifying card — this can take 10-20 seconds...");
 
   try {
     const res = await fetch(`${WORKER_URL}/api/draft-listing`, {

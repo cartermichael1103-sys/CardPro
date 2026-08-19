@@ -5,10 +5,15 @@ Given one or more photos of a card, it:
 
 1. Sends the photo(s) to Claude (Anthropic API) to identify the card (player,
    set, parallel, serial number, autograph, etc.)
-2. Searches eBay's Browse API for comparable **active listings** (not sold
-   prices — see the top-level README for why) tailored to what was identified
-3. Returns a draft listing title/description/suggested price for you to
-   review and paste into eBay yourself — it never posts anything to eBay.
+2. Returns a draft listing title/description for you to review and paste
+   into eBay yourself — it never posts anything to eBay.
+
+(An earlier version also looked up eBay comps to suggest a price, but the
+per-card search was unreliable — see git history / `CLAUDE.md` if reviving
+that. `EBAY_CLIENT_ID`/`EBAY_CLIENT_SECRET` below aren't used by this
+endpoint right now, but are kept since the same Production credentials will
+be needed again for the "save as an actual eBay draft listing" feature,
+which requires eBay's user-login OAuth flow — a separate, bigger build.)
 
 ## One-time setup
 
@@ -77,6 +82,5 @@ temporarily while testing locally.
 wrangler.toml         Worker config (name, allowed CORS origin)
 src/index.js           Routing, CORS, request validation, orchestration
 src/card-analysis.js   Builds/parses the Claude vision request
-src/comps.js            eBay Browse API auth + search + stats
-src/draft.js            Builds the listing title/description/price
+src/draft.js            Builds the listing title/description
 ```
