@@ -182,19 +182,22 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
     sku,
     marketplaceId: MARKETPLACE_ID,
     format,
-    availableQuantity: 1,
     categoryId,
     listingDescription: draft.description,
     listingPolicies,
   };
 
   if (format === "AUCTION") {
+    // Confirmed live: eBay rejects availableQuantity on auction offers
+    // ("availableQuantity is not applicable for auction offer") — an
+    // auction is inherently a single item, unlike fixed-price stock.
     body.pricingSummary = { auctionStartPrice: { value: String(price), currency: "USD" } };
     body.listingDuration = "DAYS_7";
     if (options.buyItNowPrice) {
       body.pricingSummary.buyItNowPrice = { value: String(options.buyItNowPrice), currency: "USD" };
     }
   } else {
+    body.availableQuantity = 1;
     body.pricingSummary = { price: { value: String(price), currency: "USD" } };
     if (options.bestOffer?.enabled) {
       body.listingPolicies.bestOfferTerms = { bestOfferEnabled: true };
