@@ -7,6 +7,7 @@ import {
   uploadImagesToR2,
   createInventoryItem,
   createOffer,
+  getOffer,
 } from "./ebay-listing.js";
 
 const MAX_IMAGES = 4;
@@ -174,13 +175,51 @@ async function handleSaveDraft(request, env, origin) {
       {
         offerId,
         sku,
-        message: "Draft offer created on eBay — NOT published. Review and publish it yourself from Seller Hub > Listings > Drafts.",
+        message: "Draft offer created on eBay — NOT published. Use the offer ID to check its status, or find it in Seller Hub (location varies by account).",
       },
       200,
       origin
     );
   } catch (e) {
     return jsonResponse({ error: "Saving eBay draft failed: " + e.message }, 502, origin);
+  }
+}
+
+async function handleOfferStatus(request, env, origin) {
+  const url = new URL(request.url);
+  const offerId = url.searchParams.get("offerId");
+  if (!offerId) {
+    return jsonResponse({ error: "?offerId= is required" }, 400, origin);
+  }
+
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    const offer = await getOffer(offerId, accessToken);
+    return jsonResponse(
+      {
+        offerId: offer.offerId,
+        sku: offer.sku,
+        status: offer.status,
+        listingId: offer.listing?.listingId ?? null,
+        price: offer.pricingSummary?.price ?? null,
+        note: offer.status === "PUBLISHED"
+          ? "WARNING: this offer shows as PUBLISHED — it should not be, since this tool never calls publishOffer. Investigate before assuming it's safe."
+          : "Not published — matches expected draft-only behavior.",
+      },
+      200,
+      origin
+    );
+  } catch (e) {
+    return jsonResponse({ error: "Fetching offer status failed: " + e.message }, 502, origin);
   }
 }
 
@@ -209,6 +248,9 @@ export default {
       }
       if (url.pathname === "/api/save-draft" && request.method === "POST") {
         return await handleSaveDraft(request, env, origin);
+      }
+      if (url.pathname === "/api/offer-status" && request.method === "GET") {
+        return await handleOfferStatus(request, env, origin);
       }
     } catch (e) {
       return jsonResponse({ error: "Unexpected server error: " + e.message }, 500, origin);

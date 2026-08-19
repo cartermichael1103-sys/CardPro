@@ -6,6 +6,7 @@ const PAYMENT_POLICY_URL = "https://api.ebay.com/sell/account/v1/payment_policy"
 const RETURN_POLICY_URL = "https://api.ebay.com/sell/account/v1/return_policy";
 const INVENTORY_ITEM_URL = (sku) => `https://api.ebay.com/sell/inventory/v1/inventory_item/${encodeURIComponent(sku)}`;
 const OFFER_URL = "https://api.ebay.com/sell/inventory/v1/offer";
+const OFFER_BY_ID_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}`;
 const MARKETPLACE_ID = "EBAY_US";
 
 async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
@@ -153,4 +154,12 @@ export async function createOffer(sku, draft, categoryId, policies, price, acces
     fetchImpl
   );
   return json.offerId;
+}
+
+// Reads back the offer as eBay actually has it stored — used to verify
+// what got created without relying on Seller Hub's UI, which doesn't
+// always surface Inventory API-created offers the same way it does
+// classic listings.
+export async function getOffer(offerId, accessToken, fetchImpl = fetch) {
+  return ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, {}, fetchImpl);
 }
