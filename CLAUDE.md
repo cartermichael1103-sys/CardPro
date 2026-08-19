@@ -59,12 +59,23 @@ values. Just trigger the relevant workflow.
   live/irreversible) lives ONLY in `my-drafts.js` — `/api/publish-draft`
   itself has no server-side confirmation or auth, so don't treat the UI
   gate as a real security boundary (see the public-Worker-endpoints
-  gotcha below). The exact publish URL/response shape is my
-  best-confidence read of eBay's docs, NOT yet verified against the live
-  API — flag as a likely debugging-round candidate the first time the
-  user actually clicks Publish, same pattern as other unverified eBay
-  calls in this file. Don't add auto-publish (no confirmation) or expand
+  gotcha below). Don't add auto-publish (no confirmation) or expand
   what publish does without the user explicitly asking again.
+- Real gotcha hit live the first time the user clicked Publish: eBay
+  rejected it with errorId 25760, `"shipToLocationAvailability quantity
+  insufficient to create auction listings"`. Root cause: the inventory
+  item body (`buildInventoryItemBody()`/`updateInventoryItemFields()`
+  in `ebay-listing.js`) never set `availability.shipToLocationAvailability
+  .quantity` at all — that field lives on the inventory item, separate
+  from the offer's own `availableQuantity`/`pricingSummary`, and Fixed
+  Price offers apparently tolerate its absence at creation time but
+  Auction publish does not. Fixed by setting
+  `{ shipToLocationAvailability: { quantity: 1 } }` unconditionally on
+  create, and preserving it (or backfilling `quantity: 1` for drafts
+  created before this fix) on edit. **If a draft was created before this
+  fix and still fails to publish with this error, open it on My eBay
+  Drafts, hit Edit → Save once (even with no changes) to backfill the
+  field, then retry Publish.**
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
