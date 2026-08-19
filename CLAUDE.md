@@ -139,3 +139,14 @@ values. Just trigger the relevant workflow.
 - The eBay data in `ebay_asking_prices.json` / the site's eBay section
   is **active-listing asking price**, not sold price — keep that
   distinction explicit anywhere it's surfaced.
+- Real gotcha hit live: mobile Safari/Chrome can keep serving a stale
+  cached copy of a `docs/*.js` file even after the user does a normal
+  refresh (no easy hard-refresh gesture on mobile like desktop's
+  Ctrl/Cmd+Shift+R). The `<script src="foo.js?v=N">` tags in
+  `index.html`/`list-card.html`/`my-drafts.html` have a version query
+  string for exactly this reason — **bump the `?v=N` number whenever
+  you change the corresponding `docs/*.js` file**, or mobile users may
+  not see the fix even though it's correctly live on `main`. Confirmed
+  once already: a real fix was deployed and verified correct in the
+  repo, but the user's phone kept showing the old broken behavior
+  until this was added.
