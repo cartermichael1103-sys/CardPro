@@ -19,7 +19,7 @@ EBAY_RUNAME = "REPLACE_WITH_YOUR_RUNAME"
 
 # The public base URL of your R2 bucket (r2.dev subdomain, or a custom
 # domain if you set one up). See worker/README.md.
-R2_PUBLIC_BASE_URL = "REPLACE_WITH_YOUR_R2_PUBLIC_URL"
+R2_PUBLIC_BASE_URL = "https://pub-268b0784f8754527a141a2293246597f.r2.dev"
 
 # KV namespace storing the eBay refresh token and short-lived OAuth CSRF
 # state. Create with: npx wrangler kv namespace create EBAY_TOKENS
