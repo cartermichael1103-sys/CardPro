@@ -14,10 +14,36 @@ values. Just trigger the relevant workflow.
   (Google Sheet → `docs/data/players.json`)
 - `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` — used by
   `update-ebay-prices.yml` (eBay Browse API → `docs/data/ebay_asking_prices.json`).
-  As of 2026-07-09, eBay's Production API access for this account was
-  still pending manual approval (eBay: "takes at least one business
-  day"), which causes a 401 at the OAuth token endpoint. Not a bug —
-  just re-run the workflow after approval clears.
+  Production API access for this eBay account required an MAD
+  (Marketplace Account Deletion) exemption submitted in the eBay dev
+  portal (Alerts & Notifications → exemption reason "I do not persist
+  eBay data") before the Production keyset would activate — already
+  done as of 2026-08-19, both secrets confirmed working end-to-end.
+
+## New Listing draft tool (worker/)
+
+- `docs/list-card.html` calls a **Cloudflare Worker** (`worker/`), not
+  GitHub Actions — this is a live backend, unlike everything else in
+  this repo which is static + manual-trigger pipelines.
+- Its secrets (`ANTHROPIC_API_KEY`, `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET`)
+  live in Cloudflare (`wrangler secret put`), separate from the GitHub
+  Actions secrets — they are NOT shared even though two of the names
+  match. Don't assume the Worker is configured just because GitHub
+  Actions secrets exist.
+- `docs/list-card.js` has a `WORKER_URL` constant that must be manually
+  set to the deployed `*.workers.dev` URL after running `wrangler deploy`
+  — check whether this still says `REPLACE_WITH_YOUR_WORKER_URL` before
+  assuming the feature is live.
+- Comps here use a per-request eBay search tailored to the specific
+  identified card (may include numbered/auto/graded terms if that's
+  what the card actually is), unlike `pull_ebay_prices.py` which always
+  excludes those to build a general raw-card baseline index — different
+  query logic in each case is intentional, not a bug.
+- The Worker never calls eBay's listing-creation APIs — it only
+  generates a draft (title/description/price) for the user to copy and
+  publish manually. Don't add auto-publish without the user explicitly
+  asking for it; it was deliberately scoped out due to the risk of a
+  bad AI-identified detail going live as a real listing.
 
 ## Gotchas
 
@@ -26,5 +52,6 @@ values. Just trigger the relevant workflow.
   base commit, which can be behind `main` and cause a rejected push.
 - Claude's GitHub App token cannot trigger `workflow_dispatch` runs
   (403) — ask the user to click **Run workflow** manually.
-- The eBay data is **active-listing asking price**, not sold price —
-  keep that distinction explicit anywhere it's surfaced.
+- The eBay data in `ebay_asking_prices.json` / the site's eBay section
+  is **active-listing asking price**, not sold price — keep that
+  distinction explicit anywhere it's surfaced.

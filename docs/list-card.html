@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Listing — Sports Card Break Value Index</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <div>
+        <h1>New Listing Draft</h1>
+        <p class="subtitle">Upload photos of a card — get an AI card ID, current comps, and a ready-to-copy listing draft</p>
+      </div>
+      <nav class="site-nav">
+        <a href="index.html">← Back to Index</a>
+      </nav>
+    </div>
+  </header>
+
+  <p class="disclaimer">
+    This tool never posts anything to eBay for you — it only generates a draft (title, description,
+    suggested price) that you review and paste into eBay's own listing form yourself. Card ID is
+    AI-generated and can be wrong; always double-check the details against your physical card before
+    listing. Pricing is based on <strong>current active-listing asking prices</strong>, not sold prices.
+  </p>
+
+  <div id="worker-not-configured" class="disclaimer" hidden>
+    This page isn't connected to a listing-draft backend yet. Set <code>WORKER_URL</code> at the top of
+    <code>list-card.js</code> to your deployed Cloudflare Worker URL (see <code>worker/README.md</code>).
+  </div>
+
+  <section class="upload-panel">
+    <label for="photo-input" class="upload-label">
+      Choose card photo(s) — front, and back if you have it
+    </label>
+    <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple>
+    <div id="preview-row" class="preview-row"></div>
+    <button type="button" id="analyze-btn" disabled>Analyze &amp; Get Comps</button>
+    <p id="status-msg" class="updated"></p>
+  </section>
+
+  <section id="result-panel" hidden>
+    <h2>Identified Card</h2>
+    <p class="disclaimer" id="confidence-note"></p>
+    <div id="card-fields" class="modal-stats"></div>
+
+    <h2 style="margin-top: 24px">Comps</h2>
+    <p id="comps-summary" class="modal-subtitle"></p>
+
+    <h2 style="margin-top: 24px">Listing Draft</h2>
+    <label for="draft-title">Title</label>
+    <input type="text" id="draft-title" class="draft-input">
+    <button type="button" class="copy-btn" data-target="draft-title">Copy title</button>
+
+    <label for="draft-description" style="margin-top: 12px; display: block">Description</label>
+    <textarea id="draft-description" class="draft-input" rows="10"></textarea>
+    <button type="button" class="copy-btn" data-target="draft-description">Copy description</button>
+
+    <div class="modal-stat" style="margin-top: 16px; max-width: 220px">
+      <div class="modal-stat-label">Suggested Price</div>
+      <div class="modal-stat-value" id="draft-price">—</div>
+    </div>
+  </section>
+
+  <script src="list-card.js"></script>
+</body>
+</html>

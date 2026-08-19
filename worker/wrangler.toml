@@ -1,0 +1,13 @@
+name = "cardpro-listing-worker"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Set these with `wrangler secret put <NAME>` — never put real values here:
+#   ANTHROPIC_API_KEY  - from console.anthropic.com
+#   EBAY_CLIENT_ID      - Production App ID from developer.ebay.com/my/keys
+#   EBAY_CLIENT_SECRET  - Production Cert ID from developer.ebay.com/my/keys
+
+# The only browser origin allowed to call this Worker. Update if you serve
+# the site from somewhere other than GitHub Pages.
+[vars]
+ALLOWED_ORIGIN = "https://cartermichael1103-sys.github.io"
