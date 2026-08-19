@@ -7,6 +7,7 @@ const RETURN_POLICY_URL = "https://api.ebay.com/sell/account/v1/return_policy";
 const INVENTORY_ITEM_URL = (sku) => `https://api.ebay.com/sell/inventory/v1/inventory_item/${encodeURIComponent(sku)}`;
 const OFFER_URL = "https://api.ebay.com/sell/inventory/v1/offer";
 const OFFER_BY_ID_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}`;
+const INVENTORY_ITEMS_LIST_URL = "https://api.ebay.com/sell/inventory/v1/inventory_item";
 const MARKETPLACE_ID = "EBAY_US";
 
 async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
@@ -145,7 +146,10 @@ export function buildOfferBody(sku, draft, categoryId, policies, price) {
 }
 
 // Creates the Offer but deliberately never calls publishOffer — this is
-// the draft state, not visible to buyers, reviewable in Seller Hub.
+// the draft state, not visible to buyers. NOTE: unlike classic listings,
+// these unpublished offers don't reliably show up anywhere in eBay's own
+// Seller Hub UI — see listInventoryItems()/listOffersForSku() below,
+// which back this tool's own drafts list instead.
 export async function createOffer(sku, draft, categoryId, policies, price, accessToken, fetchImpl = fetch) {
   const json = await ebayFetch(
     OFFER_URL,
@@ -162,4 +166,47 @@ export async function createOffer(sku, draft, categoryId, policies, price, acces
 // classic listings.
 export async function getOffer(offerId, accessToken, fetchImpl = fetch) {
   return ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, {}, fetchImpl);
+}
+
+export async function listInventoryItems(accessToken, limit = 25, fetchImpl = fetch) {
+  const json = await ebayFetch(
+    `${INVENTORY_ITEMS_LIST_URL}?limit=${limit}`,
+    accessToken,
+    {},
+    fetchImpl
+  );
+  return json.inventoryItems || [];
+}
+
+export async function listOffersForSku(sku, accessToken, fetchImpl = fetch) {
+  const json = await ebayFetch(
+    `${OFFER_URL}?sku=${encodeURIComponent(sku)}`,
+    accessToken,
+    {},
+    fetchImpl
+  );
+  return json.offers || [];
+}
+
+// Combines inventory items (title/description/photos live here) with
+// their offers (price/status live here) into one flat list this tool's
+// own drafts page can render, since eBay's UI won't show these.
+export async function listDrafts(accessToken, fetchImpl = fetch) {
+  const items = await listInventoryItems(accessToken, 25, fetchImpl);
+
+  const drafts = [];
+  for (const item of items) {
+    const offers = await listOffersForSku(item.sku, accessToken, fetchImpl);
+    const offer = offers[0];
+    drafts.push({
+      sku: item.sku,
+      title: item.product?.title ?? null,
+      description: item.product?.description ?? null,
+      imageUrls: item.product?.imageUrls ?? [],
+      offerId: offer?.offerId ?? null,
+      status: offer?.status ?? "NO_OFFER",
+      price: offer?.pricingSummary?.price ?? null,
+    });
+  }
+  return drafts;
 }

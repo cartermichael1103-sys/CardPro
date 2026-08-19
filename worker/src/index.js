@@ -8,6 +8,7 @@ import {
   createInventoryItem,
   createOffer,
   getOffer,
+  listDrafts,
 } from "./ebay-listing.js";
 
 const MAX_IMAGES = 4;
@@ -223,6 +224,25 @@ async function handleOfferStatus(request, env, origin) {
   }
 }
 
+async function handleListDrafts(env, origin) {
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    const drafts = await listDrafts(accessToken);
+    return jsonResponse({ drafts }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Listing drafts failed: " + e.message }, 502, origin);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = env.ALLOWED_ORIGIN || "*";
@@ -251,6 +271,9 @@ export default {
       }
       if (url.pathname === "/api/offer-status" && request.method === "GET") {
         return await handleOfferStatus(request, env, origin);
+      }
+      if (url.pathname === "/api/drafts" && request.method === "GET") {
+        return await handleListDrafts(env, origin);
       }
     } catch (e) {
       return jsonResponse({ error: "Unexpected server error: " + e.message }, 500, origin);
