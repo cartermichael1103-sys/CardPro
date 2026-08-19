@@ -1,4 +1,4 @@
-const CATEGORY_TREE_ID_URL = "https://api.ebay.com/commerce/taxonomy/v1/category_tree/get_default_category_tree_id";
+const CATEGORY_TREE_ID_URL = "https://api.ebay.com/commerce/taxonomy/v1/get_default_category_tree_id";
 const CATEGORY_SUGGESTIONS_URL = (treeId) =>
   `https://api.ebay.com/commerce/taxonomy/v1/category_tree/${treeId}/get_category_suggestions`;
 const FULFILLMENT_POLICY_URL = "https://api.ebay.com/sell/account/v1/fulfillment_policy";
