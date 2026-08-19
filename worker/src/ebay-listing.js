@@ -10,6 +10,8 @@ const OFFER_BY_ID_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/off
 const OFFER_PUBLISH_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/publish/`;
 const INVENTORY_ITEMS_LIST_URL = "https://api.ebay.com/sell/inventory/v1/inventory_item";
 const LOCATION_URL = "https://api.ebay.com/sell/inventory/v1/location";
+const LOCATION_BY_KEY_URL = (key) => `https://api.ebay.com/sell/inventory/v1/location/${encodeURIComponent(key)}`;
+const DEFAULT_LOCATION_KEY = "cardpro-default-location";
 const MARKETPLACE_ID = "EBAY_US";
 
 async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
@@ -89,20 +91,57 @@ export async function getBusinessPolicies(accessToken, fetchImpl = fetch) {
 // merchantLocationKey, but publishOffer's fuller validation rejects the
 // offer with a classic-API-style error ("No <Item.Country> exists") once
 // there's no location to derive a country from. eBay's Inventory Location
-// API is where sellers register a shipping-from location — this tool
-// can't create one on the user's behalf (needs a real address), so it
-// just reads back whichever location already exists, the same pattern as
-// getBusinessPolicies() above.
-export async function getMerchantLocationKey(accessToken, fetchImpl = fetch) {
+// API is a separate, API-only concept from anything in classic Seller
+// Hub — confirmed live via /api/offer-status diagnostics that a real
+// account can have zero locations registered here with no obvious way to
+// fix it from eBay's own site, which is why this tool now offers to
+// create one itself (see createMerchantLocation() below) rather than
+// just pointing the user at Seller Hub.
+export async function getMerchantLocation(accessToken, fetchImpl = fetch) {
   const json = await ebayFetch(`${LOCATION_URL}?limit=1`, accessToken, {}, fetchImpl);
-  const key = json.locations?.[0]?.merchantLocationKey;
-  if (!key) {
+  return json.locations?.[0] ?? null;
+}
+
+export async function getMerchantLocationKey(accessToken, fetchImpl = fetch) {
+  const location = await getMerchantLocation(accessToken, fetchImpl);
+  if (!location?.merchantLocationKey) {
     throw new Error(
-      "No eBay inventory location found — set one up (Seller Hub -> Shipping preferences -> Item " +
-      "location, or wherever your account surfaces it) before publishing a listing."
+      "No eBay inventory location found — set one up under Shipping Location on My eBay Drafts " +
+      "before publishing a listing."
     );
   }
-  return key;
+  return location.merchantLocationKey;
+}
+
+// Creates (or, called again, replaces) the seller's one shipping-from
+// location under a fixed key — this tool only ever needs one. Response
+// is 204 with no body on success per eBay's docs (ebayFetch already
+// returns null for 204). NOT yet verified against the live API — same
+// caveat as other endpoints added this build without a way to test
+// against the real API first.
+export async function createMerchantLocation(address, accessToken, fetchImpl = fetch) {
+  const body = {
+    location: {
+      address: {
+        addressLine1: address.addressLine1,
+        ...(address.addressLine2 ? { addressLine2: address.addressLine2 } : {}),
+        city: address.city,
+        stateOrProvince: address.stateOrProvince,
+        postalCode: address.postalCode,
+        country: address.country,
+      },
+    },
+    locationTypes: ["WAREHOUSE"],
+    merchantLocationStatus: "ENABLED",
+    name: address.name || "Default shipping location",
+  };
+  await ebayFetch(
+    LOCATION_BY_KEY_URL(DEFAULT_LOCATION_KEY),
+    accessToken,
+    { method: "POST", body: JSON.stringify(body) },
+    fetchImpl
+  );
+  return DEFAULT_LOCATION_KEY;
 }
 
 // R2 doesn't give a stable public URL from a binding alone — the bucket

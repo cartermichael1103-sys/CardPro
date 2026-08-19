@@ -282,12 +282,102 @@ async function handlePublish(sku, offerId) {
   }
 }
 
+function locationTextFromResult(location) {
+  const addr = location?.location?.address;
+  if (!addr) return "";
+  return [addr.addressLine1, addr.addressLine2, addr.city, addr.stateOrProvince, addr.postalCode, addr.country]
+    .filter(Boolean)
+    .join(", ");
+}
+
+async function loadLocationStatus() {
+  const panel = document.getElementById("location-panel");
+  const statusText = document.getElementById("location-status-text");
+  const form = document.getElementById("location-form");
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/location-status`);
+    const json = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Not connected to eBay yet — the drafts list will already show
+        // this same message, no need to duplicate the panel here too.
+        panel.hidden = true;
+        return;
+      }
+      panel.hidden = false;
+      statusText.textContent = "Error checking shipping location: " + (json.error || res.statusText);
+      statusText.style.color = "var(--sell)";
+      form.hidden = true;
+      return;
+    }
+
+    panel.hidden = false;
+    if (json.configured) {
+      statusText.textContent = "Configured: " + locationTextFromResult(json.location);
+      statusText.style.color = "var(--muted)";
+      form.hidden = true;
+    } else {
+      statusText.textContent = "Not set up yet — publishing will fail until you save one below.";
+      statusText.style.color = "var(--sell)";
+      form.hidden = false;
+    }
+  } catch (e) {
+    panel.hidden = false;
+    statusText.textContent = "Request failed: " + e.message;
+    statusText.style.color = "var(--sell)";
+  }
+}
+
+async function handleSaveLocation() {
+  const addressLine1 = document.getElementById("loc-address1").value.trim();
+  const addressLine2 = document.getElementById("loc-address2").value.trim();
+  const city = document.getElementById("loc-city").value.trim();
+  const stateOrProvince = document.getElementById("loc-state").value.trim();
+  const postalCode = document.getElementById("loc-zip").value.trim();
+  const country = document.getElementById("loc-country").value.trim().toUpperCase();
+  const formStatus = document.getElementById("location-form-status");
+
+  if (!addressLine1 || !city || !stateOrProvince || !postalCode || !country) {
+    formStatus.textContent = "Address line 1, city, state/province, ZIP, and country are all required.";
+    formStatus.style.color = "var(--sell)";
+    return;
+  }
+
+  formStatus.textContent = "Saving…";
+  formStatus.style.color = "var(--muted)";
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/setup-location`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ addressLine1, addressLine2, city, stateOrProvince, postalCode, country }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      formStatus.textContent = "Error: " + (json.error || res.statusText);
+      formStatus.style.color = "var(--sell)";
+      return;
+    }
+    formStatus.textContent = "Saved.";
+    formStatus.style.color = "var(--muted)";
+    await loadLocationStatus();
+  } catch (e) {
+    formStatus.textContent = "Request failed: " + e.message;
+    formStatus.style.color = "var(--sell)";
+  }
+}
+
 async function loadDrafts() {
   if (!isConfigured()) {
     document.getElementById("worker-not-configured").hidden = false;
     setStatus("Backend not configured.", true);
     return;
   }
+
+  document.getElementById("save-location-btn").addEventListener("click", handleSaveLocation);
+  loadLocationStatus();
 
   try {
     const res = await fetch(`${WORKER_URL}/api/drafts`);

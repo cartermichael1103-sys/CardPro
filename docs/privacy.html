@@ -34,10 +34,17 @@
       </li>
       <li>
         <strong>eBay account access</strong>: if you connect your eBay account, this tool stores
-        an OAuth refresh token that lets it create (but never publish) draft offers on your
-        behalf, using eBay's Sell API. It does not read or store any other eBay account data
-        beyond what's needed to create those drafts (e.g. your existing shipping/return policy
-        IDs, so it can attach them to a new draft).
+        an OAuth refresh token that lets it create draft offers on your behalf, using eBay's Sell
+        API. Drafts are never published without you explicitly clicking Publish and confirming a
+        warning that the action is immediate and irreversible. It does not read or store any
+        other eBay account data beyond what's needed for this (e.g. your existing shipping/return
+        policy IDs, so it can attach them to a draft).
+      </li>
+      <li>
+        <strong>Shipping address</strong>: eBay requires a registered shipping-from location to
+        publish a listing. If you use the Shipping Location setup on My eBay Drafts, the address
+        you enter is sent directly to eBay to register that location — it is not stored anywhere
+        else by this tool.
       </li>
       <li>
         <strong>No data is sold, shared, or used for any purpose</strong> other than operating

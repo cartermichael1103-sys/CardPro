@@ -33,10 +33,47 @@
     <code>my-drafts.js</code> to your deployed Cloudflare Worker URL.
   </div>
 
+  <section id="location-panel" class="upload-panel" hidden>
+    <h2 style="margin-top: 0">Shipping Location</h2>
+    <p class="disclaimer">
+      eBay requires a registered shipping-from location to publish a listing — this is a separate,
+      API-only setting that doesn't appear anywhere in eBay's normal seller dashboard, so this tool
+      sets it up directly. Your address is sent straight to eBay to register the location; it is not
+      stored anywhere else by this tool.
+    </p>
+    <p id="location-status-text" class="updated">Checking…</p>
+    <div id="location-form" hidden>
+      <label for="loc-address1">Address line 1</label>
+      <input type="text" id="loc-address1" class="draft-input">
+      <label for="loc-address2" style="margin-top: 8px; display: block">Address line 2 (optional)</label>
+      <input type="text" id="loc-address2" class="draft-input">
+      <div style="display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap">
+        <div>
+          <label for="loc-city">City</label>
+          <input type="text" id="loc-city" class="draft-input">
+        </div>
+        <div>
+          <label for="loc-state">State/Province</label>
+          <input type="text" id="loc-state" class="draft-input" style="max-width: 120px">
+        </div>
+        <div>
+          <label for="loc-zip">ZIP/Postal code</label>
+          <input type="text" id="loc-zip" class="draft-input" style="max-width: 120px">
+        </div>
+        <div>
+          <label for="loc-country">Country code (e.g. US)</label>
+          <input type="text" id="loc-country" class="draft-input" value="US" style="max-width: 80px">
+        </div>
+      </div>
+      <button type="button" id="save-location-btn" style="margin-top: 12px">Save Shipping Location</button>
+      <p id="location-form-status" class="updated"></p>
+    </div>
+  </section>
+
   <p id="status-msg" class="updated">Loading…</p>
 
   <div id="drafts-grid" class="board" style="display: none"></div>
 
-  <script src="my-drafts.js?v=3"></script>
+  <script src="my-drafts.js?v=4"></script>
 </body>
 </html>
