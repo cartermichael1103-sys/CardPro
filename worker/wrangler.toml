@@ -7,7 +7,29 @@ compatibility_date = "2026-08-01"
 #   EBAY_CLIENT_ID      - Production App ID from developer.ebay.com/my/keys
 #   EBAY_CLIENT_SECRET  - Production Cert ID from developer.ebay.com/my/keys
 
+[vars]
 # The only browser origin allowed to call this Worker. Update if you serve
 # the site from somewhere other than GitHub Pages.
-[vars]
 ALLOWED_ORIGIN = "https://cartermichael1103-sys.github.io"
+
+# The RuName (eBay OAuth redirect name) from developer.ebay.com/my/keys ->
+# User Tokens (eBay Sign-in). Not secret, but must match what's registered
+# there exactly. See worker/README.md for the full setup steps.
+EBAY_RUNAME = "REPLACE_WITH_YOUR_RUNAME"
+
+# The public base URL of your R2 bucket (r2.dev subdomain, or a custom
+# domain if you set one up). See worker/README.md.
+R2_PUBLIC_BASE_URL = "REPLACE_WITH_YOUR_R2_PUBLIC_URL"
+
+# KV namespace storing the eBay refresh token and short-lived OAuth CSRF
+# state. Create with: npx wrangler kv namespace create EBAY_TOKENS
+# then paste the resulting id below.
+[[kv_namespaces]]
+binding = "EBAY_TOKENS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# R2 bucket hosting card photos so eBay's Inventory API can reference them
+# by URL. Create with: npx wrangler r2 bucket create cardpro-card-images
+[[r2_buckets]]
+binding = "CARD_IMAGES"
+bucket_name = "cardpro-card-images"

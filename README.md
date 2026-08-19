@@ -68,13 +68,16 @@ so treat this as a directional signal, not real comps.
 
 ### 6. (Optional) Set up the New Listing draft tool
 The "+ New Listing" page (`docs/list-card.html`) lets you upload photos of a
-card and get an AI-generated card ID and a ready-to-copy listing draft
-(title/description). It never posts to eBay for you — you review and paste
-the draft in yourself.
+card and get an AI-generated card ID and a listing draft (title/description).
+Once you connect your eBay account, you can also save that draft directly
+to eBay as a real but **unpublished** Offer — publishing to make it visible
+to buyers is always a manual step you take yourself in Seller Hub.
 
-This needs a small backend (a Cloudflare Worker) since photo analysis can't
-run in a static site. See **`worker/README.md`** for full setup — it needs
-your own Cloudflare account (free tier) and an Anthropic API key.
+This needs a small backend (a Cloudflare Worker) since photo analysis and
+talking to eBay's account APIs can't run in a static site. See
+**`worker/README.md`** for full setup — it needs your own Cloudflare
+account (free tier), an Anthropic API key, an eBay OAuth redirect (RuName),
+a KV namespace, and an R2 bucket for image hosting.
 
 ## Day-to-day use
 

@@ -11,6 +11,11 @@
 
 * { box-sizing: border-box; }
 
+/* Author styles (e.g. .copy-btn's display: inline-block) otherwise beat the
+   browser's default [hidden] { display: none }, since author CSS always
+   wins over the UA stylesheet regardless of selector specificity. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

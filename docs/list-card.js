@@ -3,6 +3,7 @@
 const WORKER_URL = "https://cardpro-listing-worker.cartermichael1103.workers.dev";
 
 let selectedImages = []; // [{ data: base64, media_type }]
+let lastIdentifiedCard = null;
 
 function isConfigured() {
   return WORKER_URL && !WORKER_URL.startsWith("REPLACE_WITH");
@@ -53,6 +54,7 @@ function fieldRow(label, value) {
 function renderResult(payload) {
   const card = payload.identified;
   const draft = payload.draft;
+  lastIdentifiedCard = card;
 
   document.getElementById("result-panel").hidden = false;
 
@@ -80,6 +82,9 @@ function renderResult(payload) {
 
   document.getElementById("draft-title").value = draft.title;
   document.getElementById("draft-description").value = draft.description;
+
+  document.getElementById("save-ebay-draft-btn").disabled = false;
+  document.getElementById("save-draft-status").textContent = "";
 }
 
 async function handleAnalyze() {
@@ -115,6 +120,104 @@ async function handleAnalyze() {
   }
 }
 
+async function refreshEbayStatus() {
+  const statusText = document.getElementById("ebay-status-text");
+  const connectBtn = document.getElementById("ebay-connect-btn");
+
+  if (!isConfigured()) {
+    statusText.textContent = "";
+    connectBtn.hidden = true;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/ebay-status`);
+    const json = await res.json();
+    if (json.connected) {
+      statusText.textContent = "eBay account connected ✓";
+      connectBtn.hidden = true;
+    } else {
+      statusText.textContent = "Not connected to eBay — connect to save drafts directly to your account.";
+      connectBtn.hidden = false;
+    }
+  } catch (e) {
+    statusText.textContent = "Could not check eBay connection status: " + e.message;
+    connectBtn.hidden = false;
+  }
+}
+
+function handleEbayOAuthRedirectParams() {
+  const params = new URLSearchParams(window.location.search);
+  const statusText = document.getElementById("ebay-status-text");
+
+  if (params.get("ebay_connected") === "1") {
+    statusText.textContent = "eBay account connected ✓";
+  } else if (params.get("ebay_error")) {
+    statusText.textContent = "eBay connection failed: " + params.get("ebay_error");
+    statusText.style.color = "var(--sell)";
+  }
+
+  if (params.has("ebay_connected") || params.has("ebay_error")) {
+    params.delete("ebay_connected");
+    params.delete("ebay_error");
+    const newSearch = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (newSearch ? `?${newSearch}` : ""));
+  }
+}
+
+async function handleSaveEbayDraft() {
+  const priceInput = document.getElementById("draft-price-input");
+  const price = parseFloat(priceInput.value);
+  const statusEl = document.getElementById("save-draft-status");
+
+  if (!Number.isFinite(price) || price <= 0) {
+    statusEl.textContent = "Enter a price before saving.";
+    statusEl.style.color = "var(--sell)";
+    return;
+  }
+  if (!lastIdentifiedCard) {
+    statusEl.textContent = "Identify a card first.";
+    statusEl.style.color = "var(--sell)";
+    return;
+  }
+
+  const saveBtn = document.getElementById("save-ebay-draft-btn");
+  saveBtn.disabled = true;
+  statusEl.style.color = "var(--muted)";
+  statusEl.textContent = "Saving draft to eBay — this can take several seconds...";
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/save-draft`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        images: selectedImages,
+        card: lastIdentifiedCard,
+        draft: {
+          title: document.getElementById("draft-title").value,
+          description: document.getElementById("draft-description").value,
+        },
+        price,
+      }),
+    });
+    const json = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = "Error: " + (json.error || res.statusText);
+      statusEl.style.color = "var(--sell)";
+      return;
+    }
+
+    statusEl.textContent = json.message + ` (offer ${json.offerId})`;
+    statusEl.style.color = "var(--accent)";
+  } catch (e) {
+    statusEl.textContent = "Request failed: " + e.message;
+    statusEl.style.color = "var(--sell)";
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
 function handleCopyClick(e) {
   const targetId = e.target.dataset.target;
   const el = document.getElementById(targetId);
@@ -128,7 +231,14 @@ function handleCopyClick(e) {
 document.getElementById("photo-input").addEventListener("change", handleFileChange);
 document.getElementById("analyze-btn").addEventListener("click", handleAnalyze);
 document.querySelectorAll(".copy-btn").forEach((btn) => btn.addEventListener("click", handleCopyClick));
+document.getElementById("ebay-connect-btn").addEventListener("click", () => {
+  window.location.href = `${WORKER_URL}/oauth/start`;
+});
+document.getElementById("save-ebay-draft-btn").addEventListener("click", handleSaveEbayDraft);
 
 if (!isConfigured()) {
   document.getElementById("worker-not-configured").hidden = false;
+} else {
+  handleEbayOAuthRedirectParams();
+  refreshEbayStatus();
 }

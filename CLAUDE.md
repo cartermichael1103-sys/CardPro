@@ -42,18 +42,44 @@ values. Just trigger the relevant workflow.
   it rather than fix it further, in favor of speed: the tool now only
   does card ID + title/description. See git history before this date
   if reviving comps.
-- The Worker never calls eBay's listing-creation APIs — it only
-  generates a draft (title/description) for the user to copy and
-  publish manually. Don't add auto-publish without the user explicitly
-  asking for it; it was deliberately scoped out due to the risk of a
-  bad AI-identified detail going live as a real listing. The user has
-  since asked about actually saving to their eBay account as a draft
-  (not published) — this is a distinct, much bigger feature requiring
-  eBay's user-login OAuth flow, refresh token storage, and probably
-  Cloudflare R2 for image hosting (eBay's Inventory API needs image
-  URLs, not raw uploads). Scope this out explicitly with the user
-  before building — don't assume "save as draft" means auto-publish,
-  and don't assume it's a small addition to the current Worker.
+- As of 2026-08-19, the Worker CAN save a real (unpublished) eBay Offer
+  to the user's account via `/api/save-draft` — built after the user
+  explicitly confirmed they wanted this, not just copy-paste drafts.
+  It still never calls eBay's `publishOffer` — that stays a manual
+  step in Seller Hub. Don't add auto-publish without the user
+  explicitly asking for it again; the risk (bad AI-identified detail
+  going live as a real, binding listing) is why publish was kept out
+  even when the rest of the pipeline was built.
+- This eBay-write feature needs three additional pieces beyond the
+  original card-ID tool, all provisioned in the user's own accounts
+  (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
+  + short-lived OAuth CSRF state), an R2 bucket (`CARD_IMAGES`, hosts
+  photos publicly since eBay's Inventory API needs image URLs, not
+  raw uploads), and an eBay RuName (OAuth redirect registration under
+  "User Tokens (eBay Sign-in)" in the dev portal). `wrangler.toml` has
+  placeholder values (`REPLACE_WITH_...`) for the KV id, R2 public
+  URL, and RuName until the user provisions and fills these in —
+  check for those placeholders before assuming this feature is live,
+  same as the `WORKER_URL` check below.
+- `getBusinessPolicies()` in `ebay-listing.js` requires the seller
+  account to already have fulfillment + return policies configured
+  (Seller Hub → Account → Business Policies) — this tool can't create
+  those, and `/api/save-draft` will fail with a clear error if they're
+  missing.
+- I built the eBay OAuth/Inventory/Offer integration from training
+  knowledge of eBay's Sell APIs, without being able to test it against
+  the real API before the user tries it live (unlike the Browse API
+  work, which got debugged against real responses). Expect a
+  debugging round once real eBay error messages come back — likely
+  candidates: category-specific `condition` enum values (I used
+  `USED_GOOD`/`USED_EXCELLENT` as a guess, trading cards may need a
+  different category-specific condition ID), and payment policy
+  requirements varying by marketplace.
+- `/api/save-draft` is a public, unauthenticated endpoint that can
+  create real (if unpublished) objects in the user's eBay account —
+  worse than just an API-cost risk. `worker/README.md` recommends
+  Cloudflare rate limiting / Access; check whether the user has set
+  that up before treating this as a low-risk public deployment.
 
 ## Gotchas
 
