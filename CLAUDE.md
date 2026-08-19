@@ -90,6 +90,31 @@ values. Just trigger the relevant workflow.
   API tends to return explicit zero-ish defaults rather than omitting
   fields, so "is this field present" is often the wrong check — check
   the actual value.
+- Real gotcha hit live (different draft, different error, after the
+  shipToLocationAvailability fix above was confirmed working): publish
+  failed with errorId 25002, `"No <Item.Country> exists or <Item.Country>
+  is specified as an empty tag in the request."` — a classic-Trading-API-
+  style message leaking out of the modern Inventory API's publish
+  validation. Root cause: the offer body never included a
+  `merchantLocationKey`, so eBay had nothing to derive a country from at
+  publish time (createOffer/updateOffer are lenient about its absence;
+  publishOffer's fuller validation is not). Fixed via a new
+  `getMerchantLocationKey()` in `ebay-listing.js` (reads the seller's
+  first registered location from `GET /sell/inventory/v1/location`, the
+  same read-only pattern as `getBusinessPolicies()` — this tool cannot
+  create a location for the user, since that needs a real address).
+  `buildOfferBody()`/`createOffer()`/`updateOffer()` all take a new
+  `merchantLocationKey` param, threaded through from `handleSaveDraft`/
+  `handleUpdateDraft` in `index.js`. Deliberately best-effort/non-fatal
+  at save and edit time (`.catch(() => undefined)`) rather than a hard
+  requirement like Business Policies — a seller with zero locations
+  configured can still save and review a draft, it just won't publish
+  until they set one up (Seller Hub → Shipping preferences → Item
+  location, exact path varies by account) and re-save. **Same pattern as
+  the two fixes above: an existing draft that predates this fix needs
+  Edit → Save once to pick up the location key before Publish will work
+  — and if the seller truly has no location configured yet,
+  `getMerchantLocationKey()`'s error message is what should surface.**
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token

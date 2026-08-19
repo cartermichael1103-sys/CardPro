@@ -9,6 +9,7 @@ const OFFER_URL = "https://api.ebay.com/sell/inventory/v1/offer";
 const OFFER_BY_ID_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}`;
 const OFFER_PUBLISH_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/publish/`;
 const INVENTORY_ITEMS_LIST_URL = "https://api.ebay.com/sell/inventory/v1/inventory_item";
+const LOCATION_URL = "https://api.ebay.com/sell/inventory/v1/location";
 const MARKETPLACE_ID = "EBAY_US";
 
 async function ebayFetch(url, accessToken, options = {}, fetchImpl = fetch) {
@@ -82,6 +83,26 @@ export async function getBusinessPolicies(accessToken, fetchImpl = fetch) {
   }
 
   return { fulfillmentPolicyId, returnPolicyId, paymentPolicyId };
+}
+
+// Real gotcha hit live: createOffer/updateOffer succeed without a
+// merchantLocationKey, but publishOffer's fuller validation rejects the
+// offer with a classic-API-style error ("No <Item.Country> exists") once
+// there's no location to derive a country from. eBay's Inventory Location
+// API is where sellers register a shipping-from location — this tool
+// can't create one on the user's behalf (needs a real address), so it
+// just reads back whichever location already exists, the same pattern as
+// getBusinessPolicies() above.
+export async function getMerchantLocationKey(accessToken, fetchImpl = fetch) {
+  const json = await ebayFetch(`${LOCATION_URL}?limit=1`, accessToken, {}, fetchImpl);
+  const key = json.locations?.[0]?.merchantLocationKey;
+  if (!key) {
+    throw new Error(
+      "No eBay inventory location found — set one up (Seller Hub -> Shipping preferences -> Item " +
+      "location, or wherever your account surfaces it) before publishing a listing."
+    );
+  }
+  return key;
 }
 
 // R2 doesn't give a stable public URL from a binding alone — the bucket
@@ -192,7 +213,7 @@ export async function deleteInventoryItem(sku, accessToken, fetchImpl = fetch) {
 //                     AUCTION rather than something we need to block.
 //                     listingPolicies.bestOfferTerms field names are also
 //                     unverified live — same caveat as buyItNowPrice.
-export function buildOfferBody(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}) {
+export function buildOfferBody(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}, merchantLocationKey) {
   const listingPolicies = {
     fulfillmentPolicyId: policies.fulfillmentPolicyId,
     returnPolicyId: policies.returnPolicyId,
@@ -207,6 +228,11 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
     listingDescription: draft.description,
     listingPolicies,
   };
+  // Required for publishOffer to resolve a country — see
+  // getMerchantLocationKey()'s comment above. Optional here (rather than
+  // always required) so callers that only need e.g. price validation
+  // don't have to fetch a location first.
+  if (merchantLocationKey) body.merchantLocationKey = merchantLocationKey;
 
   if (format === "AUCTION") {
     // Confirmed live: eBay rejects availableQuantity on auction offers
@@ -239,11 +265,11 @@ export function buildOfferBody(sku, draft, categoryId, policies, price, format =
 // these unpublished offers don't reliably show up anywhere in eBay's own
 // Seller Hub UI — see listInventoryItems()/listOffersForSku() below,
 // which back this tool's own drafts list instead.
-export async function createOffer(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}, accessToken, fetchImpl = fetch) {
+export async function createOffer(sku, draft, categoryId, policies, price, format = "FIXED_PRICE", options = {}, merchantLocationKey, accessToken, fetchImpl = fetch) {
   const json = await ebayFetch(
     OFFER_URL,
     accessToken,
-    { method: "POST", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options)) },
+    { method: "POST", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options, merchantLocationKey)) },
     fetchImpl
   );
   return json.offerId;
@@ -257,11 +283,11 @@ export async function getOffer(offerId, accessToken, fetchImpl = fetch) {
   return ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, {}, fetchImpl);
 }
 
-export async function updateOffer(offerId, sku, draft, categoryId, policies, price, format, options = {}, accessToken, fetchImpl = fetch) {
+export async function updateOffer(offerId, sku, draft, categoryId, policies, price, format, options = {}, merchantLocationKey, accessToken, fetchImpl = fetch) {
   await ebayFetch(
     OFFER_BY_ID_URL(offerId),
     accessToken,
-    { method: "PUT", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options)) },
+    { method: "PUT", body: JSON.stringify(buildOfferBody(sku, draft, categoryId, policies, price, format, options, merchantLocationKey)) },
     fetchImpl
   );
 }
