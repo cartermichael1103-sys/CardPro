@@ -7,6 +7,7 @@ const RETURN_POLICY_URL = "https://api.ebay.com/sell/account/v1/return_policy";
 const INVENTORY_ITEM_URL = (sku) => `https://api.ebay.com/sell/inventory/v1/inventory_item/${encodeURIComponent(sku)}`;
 const OFFER_URL = "https://api.ebay.com/sell/inventory/v1/offer";
 const OFFER_BY_ID_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}`;
+const OFFER_PUBLISH_URL = (offerId) => `https://api.ebay.com/sell/inventory/v1/offer/${encodeURIComponent(offerId)}/publish/`;
 const INVENTORY_ITEMS_LIST_URL = "https://api.ebay.com/sell/inventory/v1/inventory_item";
 const MARKETPLACE_ID = "EBAY_US";
 
@@ -247,6 +248,17 @@ export async function updateOffer(offerId, sku, draft, categoryId, policies, pri
 
 export async function deleteOffer(offerId, accessToken, fetchImpl = fetch) {
   await ebayFetch(OFFER_BY_ID_URL(offerId), accessToken, { method: "DELETE" }, fetchImpl);
+}
+
+// Makes the offer live and visible to buyers — the one irreversible step
+// this tool otherwise deliberately avoids calling. POST with no body per
+// eBay's docs; response carries the resulting classic listingId. NOT
+// verified against the live API yet (like several other endpoints added
+// this build) — treat eBay's exact error shape here as a likely
+// debugging-round candidate the first time this is actually used.
+export async function publishOffer(offerId, accessToken, fetchImpl = fetch) {
+  const json = await ebayFetch(OFFER_PUBLISH_URL(offerId), accessToken, { method: "POST" }, fetchImpl);
+  return json.listingId;
 }
 
 // Deletes both halves of a draft. Offer must go first — eBay won't let you

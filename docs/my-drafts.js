@@ -27,6 +27,7 @@ function viewCardHTML(draft) {
   const statusClass = draft.status === "PUBLISHED" ? "signal-sell" : "signal-buy";
   const description = (draft.description || "").slice(0, 200);
   const canEdit = Boolean(draft.offerId); // editing needs an offer to attach price/format to
+  const canPublish = Boolean(draft.offerId) && draft.status !== "PUBLISHED";
 
   return `
     <div class="board-row" style="grid-template-columns: 90px 1fr; align-items: start; cursor: default;">
@@ -41,7 +42,9 @@ function viewCardHTML(draft) {
         <div style="margin-top: 8px">
           ${canEdit ? `<button type="button" class="copy-btn edit-btn" data-sku="${draft.sku}">Edit</button>` : ""}
           <button type="button" class="copy-btn delete-btn" data-sku="${draft.sku}" data-offer="${draft.offerId || ""}" style="background: var(--sell); margin-left: 8px">Delete</button>
+          ${canPublish ? `<button type="button" class="copy-btn publish-btn" data-sku="${draft.sku}" data-offer="${draft.offerId}" style="background: var(--accent); margin-left: 8px">Publish (goes live)</button>` : ""}
         </div>
+        <p class="publish-status updated" data-sku="${draft.sku}"></p>
       </div>
     </div>
   `;
@@ -128,6 +131,9 @@ function attachRowHandlers() {
   });
   document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", () => handleDelete(btn.dataset.sku, btn.dataset.offer));
+  });
+  document.querySelectorAll(".publish-btn").forEach((btn) => {
+    btn.addEventListener("click", () => handlePublish(btn.dataset.sku, btn.dataset.offer));
   });
   document.querySelectorAll(".save-edit-btn").forEach((btn) => {
     btn.addEventListener("click", () => handleSaveEdit(btn.dataset.sku));
@@ -231,6 +237,48 @@ async function handleDelete(sku, offerId) {
     setStatus("Draft deleted.");
   } catch (e) {
     setStatus("Delete request failed: " + e.message, true);
+  }
+}
+
+async function handlePublish(sku, offerId) {
+  const draft = draftsBySku[sku];
+  const statusEl = document.querySelector(`.publish-status[data-sku="${sku}"]`);
+
+  const confirmed = confirm(
+    `Publish "${draft.title || "this listing"}" to eBay now?\n\n` +
+    "This makes it LIVE and visible to buyers immediately, and it becomes a real, binding listing. " +
+    "This cannot be undone from here — you would have to end/cancel the listing from eBay itself.\n\n" +
+    "Are you sure?"
+  );
+  if (!confirmed) return;
+
+  if (statusEl) {
+    statusEl.textContent = "Publishing…";
+    statusEl.style.color = "var(--muted)";
+  }
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/publish-draft`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ offerId }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      if (statusEl) {
+        statusEl.textContent = "Error publishing: " + (json.error || res.statusText);
+        statusEl.style.color = "var(--sell)";
+      }
+      return;
+    }
+    draft.status = "PUBLISHED";
+    render();
+    setStatus(`Published. eBay listing ID: ${json.listingId || "unknown"}.`);
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = "Publish request failed: " + e.message;
+      statusEl.style.color = "var(--sell)";
+    }
   }
 }
 

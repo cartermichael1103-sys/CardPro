@@ -45,11 +45,26 @@ values. Just trigger the relevant workflow.
 - As of 2026-08-19, the Worker CAN save a real (unpublished) eBay Offer
   to the user's account via `/api/save-draft` — built after the user
   explicitly confirmed they wanted this, not just copy-paste drafts.
-  It still never calls eBay's `publishOffer` — that stays a manual
-  step in Seller Hub. Don't add auto-publish without the user
-  explicitly asking for it again; the risk (bad AI-identified detail
-  going live as a real, binding listing) is why publish was kept out
-  even when the rest of the pipeline was built.
+- As of 2026-08-19 (later same day), the Worker CAN also publish a draft
+  — `publishOffer()` in `ebay-listing.js` calls
+  `POST /sell/inventory/v1/offer/{offerId}/publish/` (empty body,
+  response has `listingId`), exposed via `POST /api/publish-draft`
+  (`{offerId}` in the body) and a **Publish (goes live)** button on
+  `docs/my-drafts.html`. This was deliberately left out of every prior
+  build in this section specifically because of the risk (bad
+  AI-identified detail going live as a real, binding listing) — it was
+  only added after the user explicitly asked "how would I finally
+  publish it" and then explicitly chose the confirmation-gated option
+  via AskUserQuestion. The confirmation (`confirm()` dialog warning it's
+  live/irreversible) lives ONLY in `my-drafts.js` — `/api/publish-draft`
+  itself has no server-side confirmation or auth, so don't treat the UI
+  gate as a real security boundary (see the public-Worker-endpoints
+  gotcha below). The exact publish URL/response shape is my
+  best-confidence read of eBay's docs, NOT yet verified against the live
+  API — flag as a likely debugging-round candidate the first time the
+  user actually clicks Publish, same pattern as other unverified eBay
+  calls in this file. Don't add auto-publish (no confirmation) or expand
+  what publish does without the user explicitly asking again.
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
@@ -75,11 +90,15 @@ values. Just trigger the relevant workflow.
   `USED_GOOD`/`USED_EXCELLENT` as a guess, trading cards may need a
   different category-specific condition ID), and payment policy
   requirements varying by marketplace.
-- `/api/save-draft` is a public, unauthenticated endpoint that can
-  create real (if unpublished) objects in the user's eBay account —
-  worse than just an API-cost risk. `worker/README.md` recommends
-  Cloudflare rate limiting / Access; check whether the user has set
-  that up before treating this as a low-risk public deployment.
+- `/api/save-draft`, `/api/draft`, and `/api/publish-draft` are all
+  public, unauthenticated endpoints. `/api/publish-draft` is the
+  highest-risk one added so far: given only an `offerId` (not a secret —
+  visible in the drafts list response), it makes a real listing live
+  with no server-side confirmation of any kind. `worker/README.md`
+  recommends Cloudflare rate limiting / Access; check whether the user
+  has set that up before treating this as a low-risk public deployment,
+  and consider proactively flagging `/api/publish-draft` specifically if
+  they haven't.
 - Real gotcha hit and fixed live: `get_default_category_tree_id` is a
   top-level Taxonomy API resource, NOT nested under `/category_tree/`
   (unlike `get_category_suggestions`, which is) — an extra path

@@ -20,10 +20,12 @@
   </header>
 
   <p class="disclaimer">
-    These exist as real objects in your eBay account but are <strong>not published</strong> — eBay's
-    own website generally won't show you these anywhere (a known gap in how their Inventory API and
-    Seller Hub relate, not something we can fix from here). This page reads them directly from eBay's
-    API instead, so you can review before deciding what to do with each one.
+    These exist as real objects in your eBay account but start out <strong>not published</strong> —
+    eBay's own website generally won't show unpublished drafts anywhere (a known gap in how their
+    Inventory API and Seller Hub relate, not something we can fix from here). This page reads them
+    directly from eBay's API instead, so you can review before deciding what to do with each one.
+    Use <strong>Publish</strong> when you're ready to make a listing live — that step is irreversible
+    from here and asks you to confirm first.
   </p>
 
   <div id="worker-not-configured" class="disclaimer" hidden>
@@ -35,6 +37,6 @@
 
   <div id="drafts-grid" class="board" style="display: none"></div>
 
-  <script src="my-drafts.js?v=2"></script>
+  <script src="my-drafts.js?v=3"></script>
 </body>
 </html>
