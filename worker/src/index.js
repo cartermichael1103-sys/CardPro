@@ -9,6 +9,10 @@ import {
   createOffer,
   getOffer,
   listDrafts,
+  getInventoryItem,
+  updateInventoryItemFields,
+  updateOffer,
+  deleteDraft,
 } from "./ebay-listing.js";
 
 const MAX_IMAGES = 4;
@@ -19,7 +23,7 @@ const REFRESH_TOKEN_KEY = "ebay_refresh_token";
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -243,6 +247,90 @@ async function handleListDrafts(env, origin) {
   }
 }
 
+async function handleUpdateDraft(request, env, origin) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return jsonResponse({ error: "Invalid JSON body" }, 400, origin);
+  }
+
+  const { sku, offerId, title, description, imageUrls, format } = body;
+  if (!sku || !offerId) {
+    return jsonResponse({ error: "`sku` and `offerId` are required" }, 400, origin);
+  }
+  const price = Number(body.price);
+  if (!Number.isFinite(price) || price <= 0) {
+    return jsonResponse({ error: "A positive `price` is required" }, 400, origin);
+  }
+  if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+    return jsonResponse({ error: "`imageUrls` must be a non-empty array" }, 400, origin);
+  }
+
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+
+    const [currentItem, currentOffer] = await Promise.all([
+      getInventoryItem(sku, accessToken),
+      getOffer(offerId, accessToken),
+    ]);
+
+    await updateInventoryItemFields(sku, currentItem, { title, description, imageUrls }, accessToken);
+
+    const policies = await getBusinessPolicies(accessToken);
+    const chosenFormat = format || currentOffer.format || "FIXED_PRICE";
+    await updateOffer(
+      offerId,
+      sku,
+      { description },
+      currentOffer.categoryId,
+      policies,
+      price,
+      chosenFormat,
+      accessToken
+    );
+
+    return jsonResponse({ message: "Draft updated." }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Updating draft failed: " + e.message }, 502, origin);
+  }
+}
+
+async function handleDeleteDraft(request, env, origin) {
+  const url = new URL(request.url);
+  const sku = url.searchParams.get("sku");
+  const offerId = url.searchParams.get("offerId");
+  if (!sku) {
+    return jsonResponse({ error: "?sku= is required" }, 400, origin);
+  }
+
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    await deleteDraft(sku, offerId, accessToken);
+    return jsonResponse({ message: "Draft deleted." }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Deleting draft failed: " + e.message }, 502, origin);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = env.ALLOWED_ORIGIN || "*";
@@ -274,6 +362,12 @@ export default {
       }
       if (url.pathname === "/api/drafts" && request.method === "GET") {
         return await handleListDrafts(env, origin);
+      }
+      if (url.pathname === "/api/draft" && request.method === "PUT") {
+        return await handleUpdateDraft(request, env, origin);
+      }
+      if (url.pathname === "/api/draft" && request.method === "DELETE") {
+        return await handleDeleteDraft(request, env, origin);
       }
     } catch (e) {
       return jsonResponse({ error: "Unexpected server error: " + e.message }, 500, origin);
