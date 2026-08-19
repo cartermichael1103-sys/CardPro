@@ -26,7 +26,7 @@ R2_PUBLIC_BASE_URL = "https://pub-268b0784f8754527a141a2293246597f.r2.dev"
 # then paste the resulting id below.
 [[kv_namespaces]]
 binding = "EBAY_TOKENS"
-id = "6bc589cd9e73bfb28707ff8d885c3549"
+id = "46b794c126734db8a9de3dc0d75feb56"
 
 # R2 bucket hosting card photos so eBay's Inventory API can reference them
 # by URL. Create with: npx wrangler r2 bucket create cardpro-card-images
