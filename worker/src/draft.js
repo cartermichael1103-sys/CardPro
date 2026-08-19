@@ -16,13 +16,7 @@ export function buildTitle(card) {
   return title;
 }
 
-export function suggestPrice(comps) {
-  if (comps.median_asking_price != null) return { price: comps.median_asking_price, basis: "median" };
-  if (comps.avg_asking_price != null) return { price: comps.avg_asking_price, basis: "average" };
-  return { price: null, basis: null };
-}
-
-export function buildDescription(card, comps) {
+export function buildDescription(card) {
   const lines = [];
   lines.push(`${[card.year, card.brand, card.player].filter(Boolean).join(" ")}`);
   if (card.parallel) lines.push(`Parallel: ${card.parallel}`);
@@ -38,23 +32,12 @@ export function buildDescription(card, comps) {
   lines.push("");
   lines.push("Ships securely in a top loader / card saver. See photos for exact condition — please zoom in and ask questions before buying.");
 
-  if (comps.listing_count > 0) {
-    lines.push("");
-    lines.push(
-      `(Pricing reference only — not shown to buyers: ${comps.listing_count} comparable active ` +
-      `listings found, median asking $${comps.median_asking_price}, range $${comps.min_asking_price}–$${comps.max_asking_price}.)`
-    );
-  }
-
   return lines.join("\n");
 }
 
-export function buildDraft(card, comps) {
-  const { price, basis } = suggestPrice(comps);
+export function buildDraft(card) {
   return {
     title: buildTitle(card),
-    description: buildDescription(card, comps),
-    suggested_price: price,
-    price_basis: basis,
+    description: buildDescription(card),
   };
 }
