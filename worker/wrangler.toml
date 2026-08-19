@@ -15,7 +15,7 @@ ALLOWED_ORIGIN = "https://cartermichael1103-sys.github.io"
 # The RuName (eBay OAuth redirect name) from developer.ebay.com/my/keys ->
 # User Tokens (eBay Sign-in). Not secret, but must match what's registered
 # there exactly. See worker/README.md for the full setup steps.
-EBAY_RUNAME = "REPLACE_WITH_YOUR_RUNAME"
+EBAY_RUNAME = "Michael_Carter-MichaelC-EBAY-P-hwwntmnt"
 
 # The public base URL of your R2 bucket (r2.dev subdomain, or a custom
 # domain if you set one up). See worker/README.md.
