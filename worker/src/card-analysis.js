@@ -44,6 +44,15 @@ export function buildAnthropicRequest(images) {
   };
 }
 
+// Strips a ```json ... ``` or ``` ... ``` fence if the model wrapped its
+// output in one, despite being asked not to — models do this often enough
+// that relying on prompt compliance alone isn't reliable.
+function stripCodeFence(text) {
+  const trimmed = text.trim();
+  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return match ? match[1] : trimmed;
+}
+
 export function parseAnthropicResponse(json) {
   const block = (json.content || []).find((b) => b.type === "text");
   if (!block) {
@@ -52,7 +61,7 @@ export function parseAnthropicResponse(json) {
 
   let parsed;
   try {
-    parsed = JSON.parse(block.text.trim());
+    parsed = JSON.parse(stripCodeFence(block.text));
   } catch (e) {
     throw new Error("Card analysis model returned non-JSON output: " + block.text.slice(0, 200));
   }
