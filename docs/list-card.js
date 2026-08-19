@@ -2,6 +2,8 @@
 // `wrangler deploy` from the worker/ directory (see worker/README.md).
 const WORKER_URL = "https://cardpro-listing-worker.cartermichael1103.workers.dev";
 
+const MAX_IMAGES = 8;
+
 let selectedImages = []; // [{ data: base64, media_type }]
 let lastIdentifiedCard = null;
 
@@ -22,23 +24,47 @@ function fileToBase64(file) {
   });
 }
 
-async function handleFileChange(e) {
-  const files = Array.from(e.target.files || []);
+function renderPreview() {
   const previewRow = document.getElementById("preview-row");
-  previewRow.innerHTML = "";
-  selectedImages = [];
+  previewRow.innerHTML = selectedImages
+    .map((img, i) => `
+      <div style="position: relative; display: inline-block">
+        <img class="preview-thumb" src="data:${img.media_type};base64,${img.data}">
+        <button type="button" class="remove-photo-btn" data-idx="${i}" aria-label="Remove photo">&times;</button>
+      </div>
+    `)
+    .join("");
 
-  for (const file of files.slice(0, 4)) {
+  previewRow.querySelectorAll(".remove-photo-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedImages.splice(Number(btn.dataset.idx), 1);
+      renderPreview();
+      document.getElementById("analyze-btn").disabled = selectedImages.length === 0;
+    });
+  });
+}
+
+async function handleFileChange(e) {
+  // Appends rather than replaces: a phone camera captures one photo per
+  // tap (no multi-select like a gallery picker), so re-opening the file
+  // input to take another shot would otherwise wipe out earlier ones.
+  const files = Array.from(e.target.files || []);
+  const room = MAX_IMAGES - selectedImages.length;
+
+  for (const file of files.slice(0, room)) {
     const data = await fileToBase64(file);
     selectedImages.push({ data, media_type: file.type });
-
-    const img = document.createElement("img");
-    img.src = `data:${file.type};base64,${data}`;
-    img.className = "preview-thumb";
-    previewRow.appendChild(img);
   }
 
+  // Reset so choosing/capturing again fires a fresh change event even if
+  // the browser would otherwise consider the selection unchanged.
+  e.target.value = "";
+
+  renderPreview();
   document.getElementById("analyze-btn").disabled = selectedImages.length === 0;
+  if (files.length > room) {
+    setStatus(`Only added ${room} more photo(s) — max ${MAX_IMAGES} reached.`, true);
+  }
 }
 
 function setStatus(msg, isError = false) {
@@ -245,6 +271,12 @@ function handleCopyClick(e) {
 }
 
 document.getElementById("photo-input").addEventListener("change", handleFileChange);
+document.getElementById("clear-photos-btn").addEventListener("click", () => {
+  selectedImages = [];
+  renderPreview();
+  document.getElementById("analyze-btn").disabled = true;
+  setStatus("");
+});
 document.getElementById("analyze-btn").addEventListener("click", handleAnalyze);
 document.querySelectorAll(".copy-btn[data-target]").forEach((btn) => btn.addEventListener("click", handleCopyClick));
 document.getElementById("ebay-connect-btn").addEventListener("click", () => {

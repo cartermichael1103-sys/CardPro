@@ -15,7 +15,7 @@ import {
   deleteDraft,
 } from "./ebay-listing.js";
 
-const MAX_IMAGES = 4;
+const MAX_IMAGES = 8;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB per image, bounds cost per request
 const ALLOWED_MEDIA_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const REFRESH_TOKEN_KEY = "ebay_refresh_token";
