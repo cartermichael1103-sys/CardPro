@@ -13,6 +13,7 @@ import {
   updateInventoryItemFields,
   updateOffer,
   deleteDraft,
+  publishOffer,
 } from "./ebay-listing.js";
 
 const MAX_IMAGES = 8;
@@ -237,8 +238,8 @@ async function handleOfferStatus(request, env, origin) {
         listingId: offer.listing?.listingId ?? null,
         price: offer.pricingSummary?.price ?? null,
         note: offer.status === "PUBLISHED"
-          ? "WARNING: this offer shows as PUBLISHED — it should not be, since this tool never calls publishOffer. Investigate before assuming it's safe."
-          : "Not published — matches expected draft-only behavior.",
+          ? "This offer is PUBLISHED — either you published it yourself via My eBay Drafts, or something published it outside this tool. Investigate if you didn't do this."
+          : "Not published — draft only, still safe.",
       },
       200,
       origin
@@ -327,6 +328,40 @@ async function handleUpdateDraft(request, env, origin) {
   }
 }
 
+// Makes a draft live/binding immediately — the frontend must have already
+// shown a strong confirmation before ever hitting this endpoint, since
+// there's no undo once eBay accepts the publish call.
+async function handlePublishDraft(request, env, origin) {
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return jsonResponse({ error: "Invalid JSON body" }, 400, origin);
+  }
+
+  const { offerId } = body;
+  if (!offerId) {
+    return jsonResponse({ error: "`offerId` is required" }, 400, origin);
+  }
+
+  const refreshToken = await env.EBAY_TOKENS.get(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    return jsonResponse({ error: "Not connected to eBay" }, 401, origin);
+  }
+
+  try {
+    const accessToken = await refreshAccessToken({
+      refreshToken,
+      clientId: env.EBAY_CLIENT_ID,
+      clientSecret: env.EBAY_CLIENT_SECRET,
+    });
+    const listingId = await publishOffer(offerId, accessToken);
+    return jsonResponse({ message: "Offer published — it is now live on eBay.", listingId }, 200, origin);
+  } catch (e) {
+    return jsonResponse({ error: "Publishing offer failed: " + e.message }, 502, origin);
+  }
+}
+
 async function handleDeleteDraft(request, env, origin) {
   const url = new URL(request.url);
   const sku = url.searchParams.get("sku");
@@ -390,6 +425,9 @@ export default {
       }
       if (url.pathname === "/api/draft" && request.method === "DELETE") {
         return await handleDeleteDraft(request, env, origin);
+      }
+      if (url.pathname === "/api/publish-draft" && request.method === "POST") {
+        return await handlePublishDraft(request, env, origin);
       }
     } catch (e) {
       return jsonResponse({ error: "Unexpected server error: " + e.message }, 500, origin);

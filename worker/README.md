@@ -8,9 +8,12 @@ Given one or more photos of a card, it:
 2. Returns a draft listing title/description for you to review and paste
    into eBay yourself.
 3. **Optionally**, once you connect your eBay account, can save that draft
-   directly to eBay as a real (but **unpublished**) Offer — visible to you
-   in Seller Hub, never visible to buyers. Publishing is always a manual
-   step you take yourself; this tool never calls eBay's publish API.
+   directly to eBay as a real (but **unpublished**) Offer. eBay's own
+   website generally won't show you these — see `docs/my-drafts.html` /
+   `GET /api/drafts` below. From that page you can also **Publish** a
+   draft when you're ready to make it live — that calls eBay's publish
+   API directly and is gated behind an explicit confirmation step in the
+   UI, since it's irreversible from this tool once eBay accepts it.
 
 (An earlier version also looked up eBay comps to suggest a price, but the
 per-card search was unreliable — see git history / `CLAUDE.md` if reviving
@@ -116,14 +119,18 @@ You'll be sent to eBay's sign-in/consent screen, then redirected back.
 
 ## Important: this Worker is public and can write to your eBay account
 
-`/api/draft-listing` and `/api/save-draft` are public and unauthenticated —
-anyone who finds the URL can call them. `/api/draft-listing` just costs you
-Anthropic API quota. `/api/save-draft` is more serious: once you've
+`/api/draft-listing`, `/api/save-draft`, `/api/draft`, and
+`/api/publish-draft` are all public and unauthenticated — anyone who finds
+the URL can call them. `/api/draft-listing` just costs you Anthropic API
+quota. `/api/save-draft`/`/api/draft` are more serious: once you've
 connected your eBay account, **anyone who finds the Worker URL could
-trigger draft-offer creation under your eBay account** (still never
-published, but still real objects created in your account, using your
-Anthropic + eBay quota). Strongly recommended before leaving this live for
-any length of time:
+trigger draft-offer creation, editing, or deletion under your eBay
+account**. `/api/publish-draft` is the most serious of all — it can make
+any existing draft (by `offerId`, which isn't a secret) a real, live,
+binding listing with no confirmation on the server side; the confirmation
+step lives only in `docs/my-drafts.js`'s UI, which does nothing to stop a
+direct request to the Worker URL. Strongly recommended before leaving this
+live for any length of time:
 
 - Turn on a [rate limiting rule](https://developers.cloudflare.com/waf/rate-limiting-rules/)
   in the Cloudflare dashboard (Security → WAF → Rate limiting rules) on
