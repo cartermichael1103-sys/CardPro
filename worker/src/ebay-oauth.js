@@ -1,11 +1,18 @@
 const AUTHORIZE_URL = "https://auth.ebay.com/oauth2/authorize";
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 
-// Scopes needed to create (but never publish) inventory items/offers, and
-// to look up the seller's existing business policies.
+// Scopes needed to create inventory items/offers/locations, publish
+// listings, and read/create business policies. `sell.account` (write) was
+// added alongside `sell.account.readonly` when this tool started creating
+// a payment policy on the seller's behalf (see
+// getOrCreateNoImmediatePayPolicyId() in ebay-listing.js) — anyone who
+// connected before that change is still holding a refresh token scoped
+// to read-only, and will get a 403 on that call until they reconnect via
+// "Connect to eBay" to re-consent under the new scope.
 export const USER_SCOPES = [
   "https://api.ebay.com/oauth/api_scope/sell.inventory",
   "https://api.ebay.com/oauth/api_scope/sell.account.readonly",
+  "https://api.ebay.com/oauth/api_scope/sell.account",
 ].join(" ");
 
 export function buildAuthorizeUrl({ clientId, ruName, state }) {

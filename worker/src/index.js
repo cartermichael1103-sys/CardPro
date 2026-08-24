@@ -8,6 +8,7 @@ import {
   getMerchantLocation,
   createMerchantLocation,
   getConditionForCategory,
+  getOrCreateNoImmediatePayPolicyId,
   uploadImagesToR2,
   createInventoryItem,
   createOffer,
@@ -196,6 +197,15 @@ async function handleSaveDraft(request, env, origin) {
     const imageUrls = await uploadImagesToR2(body.images, env.CARD_IMAGES, env.R2_PUBLIC_BASE_URL);
     const categoryId = await getCategoryId(body.draft.title, appToken);
     const policies = await getBusinessPolicies(accessToken);
+    // A pure auction (no Buy It Now) can't publish under a payment
+    // policy that requires immediate payment — see
+    // getOrCreateNoImmediatePayPolicyId()'s comment. Best-effort: a
+    // seller can still save the draft even if this fails (e.g. missing
+    // the write scope from before this feature existed); it just won't
+    // publish until they reconnect via Connect to eBay and re-save.
+    if (format === "AUCTION" && !offerOptions.buyItNowPrice) {
+      policies.paymentPolicyId = await getOrCreateNoImmediatePayPolicyId(accessToken).catch(() => policies.paymentPolicyId);
+    }
     // Best-effort: only actually required by eBay at publish time (see
     // getMerchantLocationKey()'s comment), so a seller with no location
     // configured yet can still save/review a draft — it just won't
@@ -348,6 +358,12 @@ async function handleUpdateDraft(request, env, origin) {
     const policies = await getBusinessPolicies(accessToken);
     const chosenFormat = format || currentOffer.format || "FIXED_PRICE";
     const offerOptions = buildOfferOptionsFromRequest(body, chosenFormat);
+    // Same self-heal as condition above — an auction being edited into
+    // (or already in) BIN-less form needs the no-immediate-pay policy,
+    // see getOrCreateNoImmediatePayPolicyId()'s comment.
+    if (chosenFormat === "AUCTION" && !offerOptions.buyItNowPrice) {
+      policies.paymentPolicyId = await getOrCreateNoImmediatePayPolicyId(accessToken).catch(() => policies.paymentPolicyId);
+    }
     // Keep it if the offer already has one; otherwise best-effort fetch,
     // so editing an old draft (created before this field existed) picks
     // it up automatically — see getMerchantLocationKey()'s comment.

@@ -141,6 +141,44 @@ export async function getBusinessPolicies(accessToken, fetchImpl = fetch) {
   return { fulfillmentPolicyId, returnPolicyId, paymentPolicyId };
 }
 
+const NO_IMMEDIATE_PAY_POLICY_NAME = "CardPro Auction (No Immediate Pay Required)";
+
+// Real gotcha hit live: errorId 25003 ("...must specify a Buy It Now
+// price") on a pure Auction happens because the account's default
+// payment policy has `immediatePay: true` — eBay can only enforce
+// immediate payment when a buyer has a non-bidding way to pay, so a
+// pure auction under that policy can never publish without a BIN price.
+// Rather than force every auction to carry a BIN price, this finds (or,
+// the first time, creates) a second payment policy with immediate
+// payment off, reusing it by name on every later call instead of
+// creating a duplicate each time. Only used for pure auctions with no
+// BIN — everything else keeps using the account's normal default policy
+// from getBusinessPolicies() above, unchanged.
+export async function getOrCreateNoImmediatePayPolicyId(accessToken, fetchImpl = fetch) {
+  const json = await ebayFetch(`${PAYMENT_POLICY_URL}?marketplace_id=${MARKETPLACE_ID}`, accessToken, {}, fetchImpl);
+  const policies = json.paymentPolicies || [];
+
+  const existing = policies.find((p) => p.immediatePay === false)
+    || policies.find((p) => p.name === NO_IMMEDIATE_PAY_POLICY_NAME);
+  if (existing) return existing.paymentPolicyId;
+
+  const created = await ebayFetch(
+    PAYMENT_POLICY_URL,
+    accessToken,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        name: NO_IMMEDIATE_PAY_POLICY_NAME,
+        marketplaceId: MARKETPLACE_ID,
+        categoryTypes: [{ name: "ALL_EXCLUDING_MOTORS_VEHICLES" }],
+        immediatePay: false,
+      }),
+    },
+    fetchImpl
+  );
+  return created.paymentPolicyId;
+}
+
 // Real gotcha hit live: createOffer/updateOffer succeed without a
 // merchantLocationKey, but publishOffer's fuller validation rejects the
 // offer with a classic-API-style error ("No <Item.Country> exists") once

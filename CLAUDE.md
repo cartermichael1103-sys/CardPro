@@ -201,6 +201,32 @@ values. Just trigger the relevant workflow.
   the next debugging step should be inspecting the raw
   `itemConditionPolicies` response for this exact category rather than
   guessing further.**
+- Added by explicit user request (not a live-error fix like the entries
+  above): a way to run a pure Auction (no Buy It Now price) without
+  hitting the same errorId 25003 immediate-payment error described
+  above every time. Root cause of that error is the account's default
+  payment policy having `immediatePay: true` — eBay can only enforce
+  immediate payment when a buyer has a non-bidding way to pay, so a pure
+  auction under that policy can never publish, BIN or no BIN fix aside.
+  Added `getOrCreateNoImmediatePayPolicyId()` in `ebay-listing.js`:
+  finds an existing payment policy with `immediatePay: false` (or one
+  named `"CardPro Auction (No Immediate Pay Required)"`, so repeated
+  calls reuse it instead of creating duplicates), or creates one via
+  `POST /sell/account/v1/payment_policy` if neither exists. Used
+  automatically in `handleSaveDraft`/`handleUpdateDraft` — ONLY for a
+  pure auction with no `buyItNowPrice` in the request — leaving the
+  account's normal default policy untouched for Fixed Price and
+  BIN-auction listings. **Creating a payment policy needs eBay's write
+  `sell.account` scope, not just `sell.account.readonly`** — added to
+  `USER_SCOPES` in `ebay-oauth.js`, but this means anyone who connected
+  their eBay account before this change is holding a refresh token
+  scoped to read-only and will get a 403 on this specific call until
+  they reconnect via **Connect to eBay** to re-consent under the new
+  scope (best-effort/non-fatal on failure, same as other optional steps
+  in these handlers — the draft still saves, it just keeps the old
+  immediate-pay policy until reconnected). NOT yet verified against the
+  live API (createPaymentPolicy's exact required fields, especially
+  `categoryTypes`, are a best-confidence guess from training knowledge).
 - This eBay-write feature needs three additional pieces beyond the
   original card-ID tool, all provisioned in the user's own accounts
   (not mine): a KV namespace (`EBAY_TOKENS`, stores the refresh token
